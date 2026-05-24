@@ -19,7 +19,7 @@ def index(request: Request):
     if PROJECTS_ROOT.exists():
         for proj_name in [d.name for d in PROJECTS_ROOT.iterdir() if d.is_dir()]:
             projects.append(project_status(proj_name))
-    return templates.TemplateResponse("index.html", {"request": request, "projects": projects})
+    return templates.TemplateResponse(request, "index.html", {"projects": projects})
 
 
 @app.get("/project/{app_name}", response_class=HTMLResponse)
@@ -37,8 +37,7 @@ def project_detail(request: Request, app_name: str):
     if notes_path.exists():
         notes = notes_path.read_text(encoding="utf-8")
 
-    return templates.TemplateResponse("project.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "project.html", {
         "app_name": app_name,
         "status": status,
         "spec": spec_data,

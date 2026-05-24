@@ -1,7 +1,7 @@
 import sqlite3
 from pathlib import Path
 
-DB_PATH = Path(__file__).resolve().parent.parent / "toolkit.db"
+DB_PATH = Path(__file__).resolve().parent.parent.parent / "toolkit.db"
 
 def get_connection() -> sqlite3.Connection:
     conn = sqlite3.connect(str(DB_PATH))
