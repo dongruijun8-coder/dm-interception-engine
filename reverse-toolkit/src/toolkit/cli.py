@@ -115,5 +115,22 @@ def dashboard(port, no_open):
     uvicorn.run(fastapi_app, host="127.0.0.1", port=port, log_level="info")
 
 
+@main.group()
+def kb():
+    """反调知识库管理"""
+    pass
+
+
+@kb.command()
+@click.option("--app", required=True, help="APP 名称")
+def note(app):
+    """查看对抗笔记"""
+    from toolkit.kb.notes import read_notes
+    notes = read_notes(app)
+    click.echo(f"=== {app} 对抗记录 ===")
+    click.echo(notes if notes else "(空)")
+    click.echo("\n使用 toolkit kb edit --app <app> <content> 编辑笔记")
+
+
 if __name__ == "__main__":
     main()
