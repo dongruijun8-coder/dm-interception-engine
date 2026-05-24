@@ -1,5 +1,5 @@
 from pathlib import Path
-from toolkit.db import insert_project, list_projects, get_project as db_get_project
+from toolkit.db import insert_project, get_project as db_get_project
 
 PROJECTS_ROOT = Path(__file__).resolve().parent.parent.parent / "projects"
 

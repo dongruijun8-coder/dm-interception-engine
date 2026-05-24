@@ -129,7 +129,7 @@ def note(app):
     notes = read_notes(app)
     click.echo(f"=== {app} 对抗记录 ===")
     click.echo(notes if notes else "(空)")
-    click.echo("\n使用 toolkit kb edit --app <app> <content> 编辑笔记")
+    click.echo("\n编辑笔记: 修改 projects/<app>/notes.md 或通过 Dashboard")
 
 
 if __name__ == "__main__":

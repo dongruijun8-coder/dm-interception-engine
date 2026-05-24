@@ -70,7 +70,3 @@ class FlowRecorder:
         out_file = date_dir / f"flows_{ts}.mitm"
         out_file.write_text(json.dumps(self.flows, ensure_ascii=False, indent=2), encoding="utf-8")
         ctx.log.info(f"Saved {len(self.flows)} flows to {out_file}")
-
-
-# mitmproxy addon entry points
-addons = []

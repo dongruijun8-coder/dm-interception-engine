@@ -65,11 +65,21 @@ def detect_common_params(requests: list[CapturedRequest]) -> set[str]:
 def detect_common_headers(requests: list[CapturedRequest]) -> dict[str, str]:
     if not requests:
         return {}
+    skip_keys = {"host", "content-length", "content-type", "accept-encoding"}
+    keysets = []
     for r in requests:
         h = r.req_headers
         if h:
-            return {k: v for k, v in h.items()
-                    if k.lower() not in ("host", "content-length", "content-type", "accept-encoding")}
+            keysets.append({k for k in h if k.lower() not in skip_keys})
+    if not keysets:
+        return {}
+    common_keys = keysets[0]
+    for ks in keysets[1:]:
+        common_keys = common_keys & ks
+    # return first occurrence values for common keys
+    for r in requests:
+        if r.req_headers:
+            return {k: v for k, v in r.req_headers.items() if k in common_keys}
     return {}
 
 
