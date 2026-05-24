@@ -3,1087 +3,745 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>截流引擎 — 多APP私域自动化</title>
+<title>截流引擎</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ===== Reset & Base ===== */
+/* ── Reset & Base ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
-  background: #0f1117;
-  color: #c9d1d9;
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: #ffffff;
+  color: #222222;
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.5;
   display: flex;
+  -webkit-font-smoothing: antialiased;
 }
-a { color: #58a6ff; text-decoration: none; }
-a:hover { text-decoration: underline; }
 
-/* ===== Sidebar ===== */
+/* ── Sidebar ── */
 .sidebar {
-  width: 220px;
-  min-width: 220px;
-  height: 100vh;
-  position: sticky;
-  top: 0;
-  background: #0d1117;
-  border-right: 1px solid #21262d;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  z-index: 100;
+  width: 220px; min-width: 220px; height: 100vh;
+  position: sticky; top: 0;
+  background: #f7f8fa;
+  border-right: 1px solid #e5e7eb;
+  display: flex; flex-direction: column;
+  padding: 0; z-index: 100;
 }
-.sidebar-logo {
-  padding: 24px 20px 20px;
-  border-bottom: 1px solid #21262d;
+.sidebar-brand { padding: 24px 20px 20px; }
+.sidebar-brand .logo {
+  font-size: 16px; font-weight: 700; color: #0a0a0a;
+  letter-spacing: -0.3px;
 }
-.sidebar-logo h1 {
-  font-size: 20px;
-  font-weight: 700;
-  color: #f0f6fc;
-  letter-spacing: 2px;
+.sidebar-brand .sub {
+  font-size: 11px; color: #5f5f5f; margin-top: 4px; letter-spacing: 0.2px;
 }
-.sidebar-logo .subtitle {
-  font-size: 11px;
-  color: #8b949e;
-  margin-top: 4px;
-}
-.sidebar-nav {
-  flex: 1;
-  padding: 12px 0;
-}
+.sidebar-nav { flex: 1; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; }
 .sidebar-nav a {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 20px;
-  color: #8b949e;
-  font-size: 14px;
-  transition: all 0.15s;
-  cursor: pointer;
-  border-left: 3px solid transparent;
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; border-radius: 6px;
+  color: #5f5f5f; font-size: 13px; font-weight: 500;
+  cursor: pointer; text-decoration: none;
+  transition: background 150ms ease, color 150ms ease;
 }
-.sidebar-nav a:hover { color: #c9d1d9; background: #161b22; text-decoration: none; }
-.sidebar-nav a.active {
-  color: #f0f6fc;
-  background: #161b22;
-  border-left-color: #58a6ff;
-}
-.sidebar-nav a .icon { font-size: 16px; width: 20px; text-align: center; }
+.sidebar-nav a:hover { color: #222222; background: #eaecf0; }
+.sidebar-nav a.active { color: #0a0a0a; background: #ffffff; font-weight: 600; }
+.sidebar-nav a .nav-icon { font-size: 15px; width: 20px; text-align: center; line-height: 1; }
 
-/* ===== Main ===== */
-.main {
-  flex: 1;
-  overflow-y: auto;
-  padding: 28px 32px;
+.sidebar-footer {
+  padding: 12px 20px; border-top: 1px solid #e5e7eb;
+  font-size: 11px; color: #8e8e93;
 }
 
-/* ===== Page Header ===== */
-.page-header {
-  margin-bottom: 28px;
+/* ── Main ── */
+.main { flex: 1; overflow-y: auto; }
+
+/* ── View switching ── */
+.view { display: none; padding: 32px 40px; }
+.view.active { display: block; }
+
+/* ── Page header ── */
+.page-hd { margin-bottom: 28px; }
+.page-hd h2 { font-size: 22px; font-weight: 700; color: #0a0a0a; letter-spacing: -0.3px; }
+.page-hd p { font-size: 13px; color: #5f5f5f; margin-top: 4px; }
+
+/* ── Stats strip ── */
+.stats-strip {
+  display: flex; gap: 0;
+  background: #f7f8fa; border-radius: 12px;
+  padding: 0; margin-bottom: 32px;
 }
-.page-header h2 {
-  font-size: 24px;
-  font-weight: 600;
-  color: #f0f6fc;
+.stat-item {
+  flex: 1; padding: 20px 24px;
+  border-right: 1px solid #e5e7eb;
 }
-.page-header p {
-  font-size: 13px;
-  color: #8b949e;
-  margin-top: 4px;
+.stat-item:last-child { border-right: none; }
+.stat-item .stat-value {
+  font-size: 28px; font-weight: 700; color: #0a0a0a;
+  letter-spacing: -1px; line-height: 1.1;
+}
+.stat-item .stat-label { font-size: 12px; color: #5f5f5f; margin-top: 6px; font-weight: 500; }
+.stat-item .stat-sub {
+  font-size: 11px; color: #1456f0; margin-top: 4px; font-weight: 600;
+  display: flex; align-items: center; gap: 4px;
 }
 
-/* ===== Stats Row ===== */
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 16px;
-  margin-bottom: 28px;
-}
-.stat-card {
-  background: #161b22;
-  border: 1px solid #21262d;
-  border-radius: 8px;
-  padding: 20px;
-  transition: border-color 0.15s;
-}
-.stat-card:hover { border-color: #30363d; }
-.stat-card .stat-label {
-  font-size: 12px;
-  color: #8b949e;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
-}
-.stat-card .stat-value {
-  font-size: 32px;
-  font-weight: 700;
-  color: #f0f6fc;
-  line-height: 1.1;
-}
-.stat-card .stat-hint {
-  font-size: 11px;
-  color: #484f58;
-  margin-top: 6px;
-}
-
-/* ===== Section ===== */
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+/* ── Section header ── */
+.section-hd {
+  display: flex; justify-content: space-between; align-items: center;
   margin-bottom: 16px;
 }
-.section-header h3 {
-  font-size: 16px;
-  font-weight: 600;
-  color: #e6edf3;
-}
+.section-hd h3 { font-size: 15px; font-weight: 600; color: #0a0a0a; }
 
-/* ===== Buttons ===== */
+/* ── Buttons ── */
 .btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 16px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid #30363d;
-  background: #21262d;
-  color: #c9d1d9;
-  transition: all 0.15s;
-  white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 18px; border-radius: 9999px;
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer; border: none; line-height: 1.4;
+  transition: background 150ms ease, opacity 150ms ease;
 }
-.btn:hover { background: #30363d; border-color: #484f58; }
-.btn-primary {
-  background: #238636;
-  color: #fff;
-  border-color: rgba(240,246,252,0.1);
-}
-.btn-primary:hover { background: #2ea043; }
-.btn-danger { color: #f85149; }
-.btn-danger:hover { background: #490202; border-color: #f85149; color: #fff; }
-.btn-sm { padding: 4px 10px; font-size: 12px; }
-.btn-xs { padding: 2px 8px; font-size: 11px; }
+.btn-primary { background: #0a0a0a; color: #ffffff; }
+.btn-primary:hover { background: #222222; }
+.btn-secondary { background: transparent; color: #0a0a0a; border: 1px solid #0a0a0a; }
+.btn-secondary:hover { background: #f7f8fa; }
+.btn-ghost { background: transparent; color: #5f5f5f; border: 1px solid #e5e7eb; }
+.btn-ghost:hover { background: #f7f8fa; color: #222222; }
+.btn-danger { background: transparent; color: #d45656; border: 1px solid #d45656; }
+.btn-danger:hover { background: #fef5f5; }
+.btn-sm { padding: 5px 12px; font-size: 11px; }
 
-/* ===== Task Cards ===== */
-.task-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+/* ── Task list ── */
+.task-list { display: flex; flex-direction: column; gap: 12px; }
 .task-card {
-  background: #161b22;
-  border: 1px solid #21262d;
-  border-radius: 8px;
-  padding: 16px 20px;
-  transition: border-color 0.15s;
+  background: #ffffff; border: 1px solid #e5e7eb; border-radius: 16px;
+  padding: 20px 24px;
+  transition: box-shadow 150ms ease;
 }
-.task-card:hover { border-color: #30363d; }
-.task-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
+.task-card:hover { box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+.task-card.running { background: #f9faff; border-color: #bfdbfe; }
+
+.task-card .tc-top {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 12px;
 }
-.task-card-title {
-  font-weight: 600;
-  font-size: 14px;
-  color: #e6edf3;
+.task-card .tc-app {
+  display: flex; align-items: center; gap: 8px;
 }
-.task-card-meta {
-  font-size: 12px;
-  color: #8b949e;
-}
-.task-progress-bar {
-  height: 6px;
-  background: #21262d;
-  border-radius: 3px;
-  overflow: hidden;
-  margin-bottom: 10px;
-}
-.task-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #238636, #2ea043);
-  border-radius: 3px;
-  transition: width 0.5s ease;
-}
-.task-detail-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 8px;
-  font-size: 12px;
-}
-.task-detail-item {
-  text-align: center;
-}
-.task-detail-item .val {
+.task-card .tc-app .app-avatar {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: #f7f8fa; border: 1px solid #e5e7eb;
+  display: flex; align-items: center; justify-content: center;
   font-size: 16px;
-  font-weight: 600;
-  color: #e6edf3;
 }
-.task-detail-item .lbl {
-  font-size: 10px;
-  color: #8b949e;
-  margin-top: 2px;
-}
-.task-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-  justify-content: flex-end;
-}
-.status-badge {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 500;
-}
-.status-idle { background: #21262d; color: #8b949e; }
-.status-running { background: #1b3a1e; color: #3fb950; }
-.status-done { background: #0d2847; color: #58a6ff; }
-.status-error { background: #490202; color: #f85149; }
+.task-card .tc-app .app-name { font-size: 15px; font-weight: 600; color: #0a0a0a; }
+.task-card .tc-app .task-id { font-size: 11px; color: #8e8e93; }
 
-/* ===== Modal ===== */
-.modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(1,4,9,0.75);
-  z-index: 1000;
-  justify-content: center;
-  align-items: flex-start;
-  padding-top: 60px;
+.task-card .tc-status {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 9999px;
+  font-size: 11px; font-weight: 600;
 }
-.modal-overlay.open { display: flex; }
-.modal {
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 12px;
-  width: 560px;
-  max-width: 90vw;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-}
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 24px;
-  border-bottom: 1px solid #21262d;
-}
-.modal-header h3 { font-size: 16px; font-weight: 600; color: #e6edf3; }
-.modal-close {
-  background: none;
-  border: none;
-  color: #8b949e;
-  font-size: 20px;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-}
-.modal-close:hover { color: #f0f6fc; }
-.modal-body { padding: 24px; }
-.modal-footer {
-  padding: 16px 24px;
-  border-top: 1px solid #21262d;
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
+.tc-status.running { background: #e8ffea; color: #1ba673; }
+.tc-status.done { background: #f7f8fa; color: #5f5f5f; }
+.tc-status.failed { background: #fef5f5; color: #d45656; }
+.tc-status.pending { background: #f7f8fa; color: #8e8e93; }
+.tc-status .dot { width: 6px; height: 6px; border-radius: 50%; }
+.tc-status.running .dot { background: #1ba673; }
+.tc-status.failed .dot { background: #d45656; }
 
-/* ===== Forms ===== */
-.form-group { margin-bottom: 16px; }
-.form-group label {
-  display: block;
-  font-size: 13px;
-  font-weight: 500;
-  color: #e6edf3;
-  margin-bottom: 6px;
+.task-card .tc-progress {
+  height: 4px; background: #f2f3f5; border-radius: 2px;
+  margin-bottom: 14px; overflow: hidden;
 }
-.form-group .hint {
-  font-size: 11px;
-  color: #8b949e;
-  margin-left: 6px;
-  font-weight: 400;
+.task-card .tc-progress .bar {
+  height: 100%; background: #1456f0; border-radius: 2px;
+  transition: width 300ms ease;
 }
-.form-control {
-  width: 100%;
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: 1px solid #30363d;
-  background: #0d1117;
-  color: #c9d1d9;
-  font-size: 13px;
-  font-family: inherit;
-  transition: border-color 0.15s;
-}
-.form-control:focus { outline: none; border-color: #58a6ff; box-shadow: 0 0 0 3px rgba(88,166,255,0.15); }
-select.form-control { cursor: pointer; }
-textarea.form-control { resize: vertical; min-height: 60px; }
-.form-row { display: flex; gap: 12px; }
-.form-row .form-group { flex: 1; }
+.task-card .tc-progress .bar.done { background: #1ba673; }
+.task-card .tc-progress .bar.failed { background: #d45656; }
 
-/* ===== Tag List ===== */
-.tag-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
-}
-.tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  background: #21262d;
-  color: #c9d1d9;
-  border: 1px solid #30363d;
-}
-.tag .tag-remove {
-  cursor: pointer;
-  color: #8b949e;
-  font-size: 14px;
-  line-height: 1;
-}
-.tag .tag-remove:hover { color: #f85149; }
-
-/* ===== Table ===== */
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-.data-table th {
-  text-align: left;
-  padding: 8px 12px;
-  color: #8b949e;
-  font-weight: 500;
-  border-bottom: 1px solid #21262d;
+.task-card .tc-meta {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px;
   font-size: 12px;
 }
-.data-table td {
-  padding: 8px 12px;
-  border-bottom: 1px solid #21262d;
-  color: #c9d1d9;
-}
-.data-table tr:hover td { background: #1c2129; }
+.task-card .tc-meta .meta-item .meta-val { font-weight: 600; color: #0a0a0a; }
+.task-card .tc-meta .meta-item .meta-lbl { font-size: 10px; color: #8e8e93; margin-top: 1px; }
 
-/* ===== Toast ===== */
-.toast-container {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.toast {
-  padding: 12px 20px;
-  border-radius: 6px;
-  font-size: 13px;
-  color: #fff;
-  animation: slideIn 0.3s ease;
-  max-width: 400px;
-}
-.toast-success { background: #238636; }
-.toast-error { background: #da3633; }
-.toast-info { background: #1f6feb; }
-@keyframes slideIn {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
+.task-card .tc-actions { margin-top: 14px; display: flex; gap: 8px; }
 
-/* ===== Empty State ===== */
+/* ── Empty state ── */
 .empty-state {
-  text-align: center;
-  padding: 40px 20px;
-  color: #484f58;
+  text-align: center; padding: 48px 20px; color: #8e8e93;
 }
-.empty-state .icon { font-size: 40px; margin-bottom: 10px; }
+.empty-state .empty-icon { font-size: 32px; margin-bottom: 8px; }
 .empty-state p { font-size: 13px; }
 
-/* ===== Loading ===== */
-.loading { text-align: center; padding: 20px; color: #8b949e; font-size: 13px; }
-.spinner {
-  display: inline-block;
-  width: 16px; height: 16px;
-  border: 2px solid #30363d;
-  border-top-color: #58a6ff;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-  vertical-align: middle;
-  margin-right: 6px;
+/* ── Account panel ── */
+.acct-grid { display: grid; grid-template-columns: 1fr 340px; gap: 32px; }
+.acct-list-card {
+  background: #ffffff; border: 1px solid #e5e7eb; border-radius: 16px;
+  padding: 20px 24px;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ===== Hidden ===== */
-.hidden { display: none !important; }
-
-/* ===== Scrollbar ===== */
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: #0d1117; }
-::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #484f58; }
-
-/* ===== Responsive ===== */
-@media (max-width: 900px) {
-  .stats-row { grid-template-columns: repeat(3, 1fr); }
-  .task-detail-grid { grid-template-columns: repeat(3, 1fr); }
+.acct-list-card h4 { font-size: 14px; font-weight: 600; color: #0a0a0a; margin-bottom: 14px; }
+.acct-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.acct-table th {
+  text-align: left; padding: 8px 12px; color: #5f5f5f;
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.5px; border-bottom: 1px solid #e5e7eb;
 }
-@media (max-width: 600px) {
-  .sidebar { width: 60px; min-width: 60px; }
-  .sidebar-logo h1 { font-size: 14px; letter-spacing: 0; }
-  .sidebar-logo .subtitle { display: none; }
-  .sidebar-nav a span:not(.icon) { display: none; }
-  .stats-row { grid-template-columns: repeat(2, 1fr); }
-  .task-detail-grid { grid-template-columns: repeat(2, 1fr); }
-  .form-row { flex-direction: column; }
+.acct-table td {
+  padding: 8px 12px; border-bottom: 1px solid #f2f3f5; color: #222222;
+}
+.acct-table td.health-ok { color: #1ba673; }
+.acct-table td.health-warn { color: #d29922; }
+
+.acct-form-card {
+  background: #f7f8fa; border: 1px solid #e5e7eb; border-radius: 16px;
+  padding: 20px 24px; height: fit-content;
+}
+.acct-form-card h4 { font-size: 14px; font-weight: 600; color: #0a0a0a; margin-bottom: 16px; }
+
+.form-group { margin-bottom: 14px; }
+.form-group label {
+  display: block; font-size: 12px; font-weight: 600; color: #222222;
+  margin-bottom: 6px;
+}
+.form-group input, .form-group select {
+  width: 100%; padding: 8px 12px; border-radius: 8px;
+  border: 1px solid #e5e7eb; background: #ffffff;
+  font-family: inherit; font-size: 13px; color: #0a0a0a;
+  height: 40px; transition: border 150ms ease;
+}
+.form-group input:focus, .form-group select:focus {
+  outline: none; border-color: #1456f0; border-width: 2px;
+}
+
+/* ── Template panel ── */
+.tpl-grid { display: grid; grid-template-columns: 1fr 340px; gap: 32px; }
+.tpl-list-card {
+  background: #ffffff; border: 1px solid #e5e7eb; border-radius: 16px;
+  padding: 20px 24px;
+}
+.tpl-list-card h4 { font-size: 14px; font-weight: 600; color: #0a0a0a; margin-bottom: 14px; }
+.tpl-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid #f2f3f5;
+}
+.tpl-item:last-child { border-bottom: none; }
+.tpl-item .tpl-num {
+  width: 24px; height: 24px; border-radius: 9999px;
+  background: #f7f8fa; color: #5f5f5f;
+  font-size: 11px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.tpl-item .tpl-text { flex: 1; font-size: 13px; color: #222222; }
+.tpl-item .tpl-remove {
+  width: 28px; height: 28px; border-radius: 9999px;
+  border: 1px solid #e5e7eb; background: #ffffff;
+  color: #8e8e93; cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 150ms ease;
+}
+.tpl-item .tpl-remove:hover { border-color: #d45656; color: #d45656; }
+
+.tpl-form-card {
+  background: #f7f8fa; border: 1px solid #e5e7eb; border-radius: 16px;
+  padding: 20px 24px; height: fit-content;
+}
+.tpl-form-card h4 { font-size: 14px; font-weight: 600; color: #0a0a0a; margin-bottom: 16px; }
+.tpl-form-card textarea {
+  width: 100%; padding: 10px 12px; border-radius: 8px;
+  border: 1px solid #e5e7eb; background: #ffffff;
+  font-family: inherit; font-size: 13px; color: #0a0a0a;
+  resize: vertical; min-height: 80px;
+  transition: border 150ms ease;
+}
+.tpl-form-card textarea:focus { outline: none; border-color: #1456f0; border-width: 2px; }
+
+/* ── Modal ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(10,10,10,0.3); z-index: 200;
+  justify-content: center; align-items: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: #ffffff; border: 1px solid #e5e7eb; border-radius: 20px;
+  padding: 28px; width: 460px; max-height: 85vh; overflow-y: auto;
+  box-shadow: 0 12px 16px -4px rgba(36,36,36,0.08);
+}
+.modal h3 { font-size: 17px; font-weight: 700; color: #0a0a0a; margin-bottom: 20px; }
+.modal .form-group { margin-bottom: 16px; }
+.modal .form-group label { font-size: 12px; font-weight: 600; color: #222222; margin-bottom: 6px; display: block; }
+.modal .form-group input,
+.modal .form-group select {
+  width: 100%; padding: 8px 12px; border-radius: 8px;
+  border: 1px solid #e5e7eb; background: #ffffff;
+  font-family: inherit; font-size: 13px; color: #0a0a0a;
+  height: 40px;
+}
+.modal .form-group input:focus,
+.modal .form-group select:focus { outline: none; border-color: #1456f0; border-width: 2px; }
+.modal .form-row { display: flex; gap: 12px; }
+.modal .form-row .form-group { flex: 1; }
+.modal .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 1px solid #f2f3f5; }
+
+/* ── Toast ── */
+.toast-container { position: fixed; top: 20px; right: 20px; z-index: 300; display: flex; flex-direction: column; gap: 8px; }
+.toast {
+  padding: 10px 16px; border-radius: 10px;
+  font-size: 13px; font-weight: 500; color: #ffffff;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+  animation: toastIn 200ms ease;
+}
+.toast.success { background: #1ba673; }
+.toast.error { background: #d45656; }
+@keyframes toastIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Filter chips ── */
+.filter-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.filter-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 12px; border-radius: 9999px;
+  font-size: 11px; font-weight: 600; color: #5f5f5f;
+  background: #f7f8fa; border: 1px solid #e5e7eb;
 }
 </style>
 </head>
 <body>
 
-<!-- ===== Sidebar ===== -->
-<aside class="sidebar">
-  <div class="sidebar-logo">
-    <h1>截流引擎</h1>
-    <div class="subtitle">Multi-APP DM Automation</div>
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">截流引擎</div>
+    <div class="sub">Multi-APP DM Automation</div>
   </div>
-  <nav class="sidebar-nav">
-    <a data-view="dashboard" class="active" onclick="switchView('dashboard')">
-      <span class="icon">&#9632;</span> 仪表盘
+  <div class="sidebar-nav">
+    <a class="active" data-view="dashboard" onclick="switchView('dashboard')">
+      <span class="nav-icon">&#9670;</span> 仪表盘
     </a>
     <a data-view="accounts" onclick="switchView('accounts')">
-      <span class="icon">&#9733;</span> 账号管理
+      <span class="nav-icon">&#9881;</span> 账号管理
     </a>
     <a data-view="templates" onclick="switchView('templates')">
-      <span class="icon">&#9998;</span> 消息模板
+      <span class="nav-icon">&#9998;</span> 消息模板
     </a>
-  </nav>
-</aside>
+  </div>
+  <div class="sidebar-footer">v0.1.0</div>
+</div>
 
-<!-- ===== Main Content ===== -->
-<main class="main" id="mainContent"></main>
+<!-- Main -->
+<div class="main">
 
-<!-- ===== Toast Container ===== -->
-<div class="toast-container" id="toastContainer"></div>
+  <!-- ═══ Dashboard View ═══ -->
+  <div class="view active" id="view-dashboard">
+    <div class="page-hd">
+      <h2>仪表盘</h2>
+      <p>总览所有 APP 的截流私信运行状态</p>
+    </div>
 
-<!-- ===== New Task Modal ===== -->
-<div class="modal-overlay" id="taskModalOverlay">
+    <div class="stats-strip" id="stats"></div>
+
+    <div class="section-hd">
+      <h3>任务</h3>
+      <button class="btn btn-primary" onclick="showNewTaskModal()">+ 新建任务</button>
+    </div>
+    <div class="task-list" id="tasks"></div>
+  </div>
+
+  <!-- ═══ Accounts View ═══ -->
+  <div class="view" id="view-accounts">
+    <div class="page-hd">
+      <h2>账号管理</h2>
+      <p>管理各 APP 的登录账号和凭证</p>
+    </div>
+    <div class="acct-grid">
+      <div class="acct-list-card">
+        <h4>已有账号</h4>
+        <table class="acct-table">
+          <thead><tr><th>APP</th><th>手机号</th><th>状态</th><th>上次检查</th></tr></thead>
+          <tbody id="acctTbody"><tr><td colspan="4" style="color:#8e8e93;text-align:center;padding:24px">暂无账号</td></tr></tbody>
+        </table>
+      </div>
+      <div class="acct-form-card">
+        <h4>添加账号</h4>
+        <div class="form-group">
+          <label>APP</label>
+          <select id="acctApp" onchange="renderAccounts()"></select>
+        </div>
+        <div class="form-group">
+          <label>手机号</label>
+          <input id="acctPhone" placeholder="13800138000">
+        </div>
+        <div class="form-group">
+          <label>Token（可选）</label>
+          <input id="acctToken" placeholder="已有 token 直接填入">
+        </div>
+        <button class="btn btn-primary" onclick="addAccount()" style="width:100%;justify-content:center">添加账号</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Templates View ═══ -->
+  <div class="view" id="view-templates">
+    <div class="page-hd">
+      <h2>消息模板</h2>
+      <p>配置每个 APP 的私信话术，发送时随机选取一条</p>
+    </div>
+    <div class="tpl-grid">
+      <div class="tpl-list-card">
+        <h4 id="tplListTitle">话术列表</h4>
+        <div id="tplList"><p style="color:#8e8e93;font-size:13px;padding:12px 0">暂无话术</p></div>
+      </div>
+      <div class="tpl-form-card">
+        <h4>添加话术</h4>
+        <div class="form-group">
+          <label>APP</label>
+          <select id="tplApp" onchange="renderTemplates()"></select>
+        </div>
+        <div class="form-group">
+          <label>话术内容</label>
+          <textarea id="tplText" placeholder="输入一条话术，支持 {name} 变量"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="addTemplate()" style="width:100%;justify-content:center">添加话术</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- New Task Modal -->
+<div class="modal-overlay" id="newTaskModal">
   <div class="modal">
-    <div class="modal-header">
-      <h3>新建任务</h3>
-      <button class="modal-close" onclick="closeModal('taskModalOverlay')">&times;</button>
+    <h3>新建任务</h3>
+    <div class="form-group">
+      <label>APP</label>
+      <select id="taskApp" onchange="loadTaskAccounts()"></select>
     </div>
-    <div class="modal-body">
-      <div class="form-row">
-        <div class="form-group">
-          <label>目标 APP</label>
-          <select class="form-control" id="taskAppSelect" onchange="onTaskAppChange()">
-            <option value="">— 选择 APP —</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>使用账号</label>
-          <select class="form-control" id="taskAccountSelect">
-            <option value="">— 先选择 APP —</option>
-          </select>
-        </div>
+    <div class="form-group">
+      <label>账号</label>
+      <select id="taskAccount"></select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>性别筛选</label>
+        <select id="filterGender">
+          <option value="all">全部</option>
+          <option value="male">仅男性</option>
+          <option value="female">仅女性</option>
+        </select>
       </div>
       <div class="form-group">
-        <label>筛选条件 <span class="hint">（可选，留空表示不限制）</span></label>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>性别限制</label>
-          <select class="form-control" id="taskGenderFilter">
-            <option value="">不限</option>
-            <option value="male">男</option>
-            <option value="female">女</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>最高段位</label>
-          <select class="form-control" id="taskRankFilter">
-            <option value="0">不限</option>
-            <option value="1">1段</option>
-            <option value="2">2段</option>
-            <option value="3">3段</option>
-            <option value="4">4段</option>
-            <option value="5">5段</option>
-            <option value="6">6段</option>
-            <option value="7">7段</option>
-            <option value="8">8段</option>
-            <option value="9">9段</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>房间类型</label>
-          <select class="form-control" id="taskRoomTypeFilter">
-            <option value="">不限</option>
-            <option value="public">公开房</option>
-            <option value="private">私密房</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group">
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-          <input type="checkbox" id="taskSkipSent" style="width:16px;height:16px;accent-color:#238636;">
-          跳过已发送用户
-        </label>
+        <label>排名范围</label>
+        <input id="filterRank" type="number" value="50" placeholder="只取前 N 名">
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeModal('taskModalOverlay')">取消</button>
+    <div class="form-row">
+      <div class="form-group">
+        <label>房间类型</label>
+        <select id="filterRoomType">
+          <option value="all">全部</option>
+          <option value="voice">仅语音厅</option>
+          <option value="video">仅视频直播</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>&nbsp;</label>
+        <div style="display:flex;align-items:center;height:40px;gap:6px">
+          <input type="checkbox" id="filterSkipSent" checked style="width:16px;height:16px">
+          <label for="filterSkipSent" style="margin:0;font-size:12px">跳过已发送用户</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('newTaskModal')">取消</button>
       <button class="btn btn-primary" onclick="createTask()">创建并启动</button>
     </div>
   </div>
 </div>
 
-<!-- ===== Account Management Modal ===== -->
-<div class="modal-overlay" id="accountModalOverlay">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>账号管理</h3>
-      <button class="modal-close" onclick="closeModal('accountModalOverlay')">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>目标 APP</label>
-        <select class="form-control" id="accountAppSelect" onchange="onAccountAppChange()">
-          <option value="">— 选择 APP —</option>
-        </select>
-      </div>
-      <div id="accountAddSection" class="hidden">
-        <div style="border:1px solid #21262d;border-radius:8px;padding:16px;margin-bottom:16px;">
-          <h4 style="font-size:14px;color:#e6edf3;margin-bottom:12px;">添加账号</h4>
-          <div class="form-row">
-            <div class="form-group">
-              <label>手机号</label>
-              <input class="form-control" id="newAccountPhone" placeholder="13800000000">
-            </div>
-            <div class="form-group">
-              <label>Token</label>
-              <input class="form-control" id="newAccountToken" placeholder="Bearer token 或 API key">
-            </div>
-          </div>
-          <button class="btn btn-primary" onclick="addAccount()">添加</button>
-        </div>
-        <h4 style="font-size:14px;color:#e6edf3;margin-bottom:8px;">已有账号</h4>
-        <div id="accountListContainer">
-          <p class="empty-state">请先选择 APP</p>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeModal('accountModalOverlay')">关闭</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===== Template Modal ===== -->
-<div class="modal-overlay" id="templateModalOverlay">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>消息模板管理</h3>
-      <button class="modal-close" onclick="closeModal('templateModalOverlay')">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>目标 APP</label>
-        <select class="form-control" id="templateAppSelect" onchange="loadTemplates()">
-          <option value="">— 选择 APP —</option>
-        </select>
-      </div>
-      <div id="templateEditSection" class="hidden">
-        <div style="border:1px solid #21262d;border-radius:8px;padding:16px;margin-bottom:16px;">
-          <h4 style="font-size:14px;color:#e6edf3;margin-bottom:12px;">添加模板</h4>
-          <textarea class="form-control" id="newTemplateContent" placeholder="输入模板内容，支持 {nickname} {room_name} 等变量"></textarea>
-          <button class="btn btn-primary" style="margin-top:8px;" onclick="addTemplate()">添加</button>
-        </div>
-        <h4 style="font-size:14px;color:#e6edf3;margin-bottom:8px;">当前模板列表</h4>
-        <div id="templateListContainer">
-          <p class="empty-state">请先选择 APP</p>
-        </div>
-        <button class="btn btn-primary" style="margin-top:12px;" onclick="saveTemplates()">保存修改</button>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeModal('templateModalOverlay')">关闭</button>
-    </div>
-  </div>
-</div>
+<div class="toast-container" id="toasts"></div>
 
 <script>
-// ===== State =====
+// ── State ──
+const API = '/api';
 let currentView = 'dashboard';
-let apps = [];
-let tasks = [];
-let stats = {};
-let accounts = [];
-let templates = [];
-let refreshTimer = null;
 
-// ===== Init =====
-document.addEventListener('DOMContentLoaded', () => {
-  loadApps();
-  switchView('dashboard');
-  refreshTimer = setInterval(refreshCurrentView, 5000);
-});
-
-// ===== Navigation =====
+// ── View Switching ──
 function switchView(view) {
   currentView = view;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
   document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
-  const link = document.querySelector(`[data-view="${view}"]`);
-  if (link) link.classList.add('active');
+  document.querySelector(`[data-view="${view}"]`).classList.add('active');
 
-  switch (view) {
-    case 'dashboard': renderDashboard(); break;
-    case 'accounts': renderAccountsPage(); break;
-    case 'templates': renderTemplatesPage(); break;
-  }
+  if (view === 'accounts') { loadApps(); renderAccounts(); }
+  if (view === 'templates') { loadTplApps(); renderTemplates(); }
+  if (view === 'dashboard') refresh();
 }
 
-function refreshCurrentView() {
-  switch (currentView) {
-    case 'dashboard': fetchDashboardData().then(renderDashboard); break;
-  }
+// ── Dashboard ──
+async function refresh() {
+  if (currentView !== 'dashboard') return;
+  await Promise.all([loadStats(), loadTasks()]);
 }
 
-// ===== Toast =====
-function toast(msg, type = 'info') {
-  const container = document.getElementById('toastContainer');
-  const el = document.createElement('div');
-  el.className = `toast toast-${type}`;
-  el.textContent = msg;
-  container.appendChild(el);
-  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; }, 2500);
-  setTimeout(() => el.remove(), 3000);
+async function loadStats() {
+  const r = await fetch(API + '/stats');
+  const s = await r.json();
+  document.getElementById('stats').innerHTML = `
+    <div class="stat-item">
+      <div class="stat-value">${s.app_count}</div>
+      <div class="stat-label">接入 APP</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value">${s.total_users.toLocaleString()}</div>
+      <div class="stat-label">累计拉取用户</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value">${s.total_sent.toLocaleString()}</div>
+      <div class="stat-label">已发私信</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value">${s.running_tasks}</div>
+      <div class="stat-label">运行中任务</div>
+      ${s.running_tasks > 0 ? `<div class="stat-sub">&bull; 进行中</div>` : ''}
+    </div>
+  `;
 }
 
-// ===== Modal =====
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+async function loadTasks() {
+  const r = await fetch(API + '/tasks');
+  const tasks = await r.json();
+  const div = document.getElementById('tasks');
 
-// ===== API =====
-const API = {
-  async get(url) {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-    return res.json();
-  },
-  async post(url, data) {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-    return res.json();
-  },
-  async put(url, data) {
-    const res = await fetch(url, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-    return res.json();
-  }
-};
-
-// ===== Loaders =====
-async function loadApps() {
-  try { apps = await API.get('/api/apps'); } catch (e) { console.error('loadApps:', e); }
-  populateAppSelects();
-}
-
-async function fetchDashboardData() {
-  try {
-    const [s, t] = await Promise.all([API.get('/api/stats'), API.get('/api/tasks')]);
-    stats = s; tasks = t;
-  } catch (e) { console.error('fetchDashboardData:', e); }
-}
-
-function populateAppSelects() {
-  const selects = ['taskAppSelect', 'accountAppSelect', 'templateAppSelect'];
-  selects.forEach(id => {
-    const sel = document.getElementById(id);
-    if (!sel) return;
-    sel.innerHTML = '<option value="">— 选择 APP —</option>';
-    apps.forEach(a => {
-      sel.innerHTML += `<option value="${escHtml(a.name)}">${escHtml(a.name)}${a.has_plugin ? '' : ' (无插件)'}</option>`;
-    });
-  });
-}
-
-// ===== Dashboard =====
-async function renderDashboard() {
-  const main = document.getElementById('mainContent');
-  if (tasks.length === 0 && !stats.app_count) {
-    // First load — show skeleton briefly, then fetch
-    main.innerHTML = '<div class="loading"><span class="spinner"></span>加载中...</div>';
-    await fetchDashboardData();
-    // Re-render after fetch
+  if (tasks.length === 0) {
+    div.innerHTML = `<div class="empty-state"><div class="empty-icon">&#9744;</div><p>暂无任务，点击"新建任务"开始</p></div>`;
+    return;
   }
 
-  let running = stats.running_tasks || 0;
-  let sentTotal = stats.total_sent || 0;
-  let appCount = stats.app_count || 0;
-  let accountCount = stats.account_count || 0;
-  let userTotal = stats.total_users || 0;
+  div.innerHTML = tasks.map(t => {
+    const running = t.status === 'authenticating' || t.status === 'fetching' || t.status === 'sending';
+    const done = t.status === 'done';
+    const failed = t.status === 'failed';
+    const pct = t.users_fetched > 0 ? Math.round((t.msg_sent || 0) / t.users_fetched * 100) : 0;
+    const barClass = done ? 'done' : failed ? 'failed' : '';
 
-  let html = '';
-  html += `<div class="page-header"><h2>仪表盘</h2><p>系统运行概览 · 数据每 5 秒自动刷新</p></div>`;
-  html += `<div class="stats-row">`;
-  html += statCard('接入 APP', appCount, '已配置插件');
-  html += statCard('托管账号', accountCount, '健康在线');
-  html += statCard('累计用户', userTotal, '去重后总量');
-  html += statCard('累计发送', sentTotal, '消息总量');
-  html += statCard('运行中', running, '活动任务');
-  html += `</div>`;
+    let statusHtml = '';
+    if (running) statusHtml = `<span class="tc-status running"><span class="dot"></span>运行中</span>`;
+    else if (done) statusHtml = `<span class="tc-status done">已完成</span>`;
+    else if (failed) statusHtml = `<span class="tc-status failed"><span class="dot"></span>失败</span>`;
+    else statusHtml = `<span class="tc-status pending">等待中</span>`;
 
-  // Toolbar
-  html += `<div class="section-header"><h3>任务列表</h3><button class="btn btn-primary" onclick="openNewTaskModal()">+ 新建任务</button></div>`;
+    let actionsHtml = '';
+    if (done || failed) {
+      actionsHtml = `<button class="btn btn-sm btn-secondary" onclick="rerunTask(${t.id})">重新运行</button>`;
+    } else if (running) {
+      actionsHtml = `<button class="btn btn-sm btn-ghost disabled" disabled>运行中...</button>`;
+    } else {
+      actionsHtml = `<button class="btn btn-sm btn-primary" onclick="rerunTask(${t.id})">启动</button>`;
+    }
 
-  // Tasks
-  if (!tasks || tasks.length === 0) {
-    html += `<div class="empty-state"><div class="icon">&#9881;</div><p>暂无任务，点击"新建任务"开始</p></div>`;
-  } else {
-    html += `<div class="task-list">`;
-    tasks.forEach(t => {
-      html += renderTaskCard(t);
-    });
-    html += `</div>`;
-  }
-
-  main.innerHTML = html;
-}
-
-function statCard(label, value, hint) {
-  return `<div class="stat-card">
-    <div class="stat-label">${escHtml(label)}</div>
-    <div class="stat-value">${value}</div>
-    <div class="stat-hint">${escHtml(hint)}</div>
-  </div>`;
-}
-
-function renderTaskCard(t) {
-  let statusClass = 'status-idle';
-  let statusText = '待启动';
-  if (t.status === 'running') { statusClass = 'status-running'; statusText = '运行中'; }
-  else if (t.status === 'done') { statusClass = 'status-done'; statusText = '已完成'; }
-  else if (t.status === 'error') { statusClass = 'status-error'; statusText = '异常'; }
-
-  let totalProc = (t.rooms_fetched || 0) + (t.users_fetched || 0) + (t.users_deduped || 0) + (t.msg_sent || 0);
-  let totalMax = Math.max(totalProc, 1);
-  let progress = totalProc > 0 ? Math.round(( (t.msg_success || 0) / Math.max(totalMax, 1) ) * 100) : 0;
-  if (t.status === 'done') progress = 100;
-  if (t.status === 'running' && progress === 0) progress = Math.min(Math.round(totalProc / 400 * 100), 90);
-
-  return `<div class="task-card">
-    <div class="task-card-header">
-      <div>
-        <span class="task-card-title">${escHtml(t.app_name || '—')} · 任务 #${t.id}</span>
-        <span class="status-badge ${statusClass}" style="margin-left:10px;">${statusText}</span>
+    return `
+    <div class="task-card ${running ? 'running' : ''}">
+      <div class="tc-top">
+        <div class="tc-app">
+          <div class="app-avatar">&#x1F4F1;</div>
+          <div>
+            <div class="app-name">${escapeHtml(t.app_name)}</div>
+            <div class="task-id">Task #${t.id}</div>
+          </div>
+        </div>
+        ${statusHtml}
       </div>
-      <div class="task-card-meta">创建于 ${t.created_at || '—'}</div>
-    </div>
-    <div class="task-progress-bar">
-      <div class="task-progress-fill" style="width:${progress}%"></div>
-    </div>
-    <div class="task-detail-grid">
-      <div class="task-detail-item"><div class="val">${t.rooms_fetched ?? '—'}</div><div class="lbl">房间获取</div></div>
-      <div class="task-detail-item"><div class="val">${t.users_fetched ?? '—'}</div><div class="lbl">用户获取</div></div>
-      <div class="task-detail-item"><div class="val">${t.users_deduped ?? '—'}</div><div class="lbl">去重用户</div></div>
-      <div class="task-detail-item"><div class="val">${t.msg_sent ?? '—'}</div><div class="lbl">消息发送</div></div>
-      <div class="task-detail-item"><div class="val">${t.msg_success ?? '—'}</div><div class="lbl">发送成功</div></div>
-      <div class="task-detail-item"><div class="val">${t.msg_failed ?? '—'}</div><div class="lbl">发送失败</div></div>
-    </div>
-    <div class="task-actions">
-      ${t.status === 'idle' ? `<button class="btn btn-sm btn-primary" onclick="runTask(${t.id})">&#9654; 启动</button>` : ''}
-      ${t.status === 'running' ? `<button class="btn btn-sm" disabled>运行中...</button>` : ''}
-    </div>
-  </div>`;
+      <div class="tc-progress"><div class="bar ${barClass}" style="width:${pct}%"></div></div>
+      <div class="tc-meta">
+        <div class="meta-item"><div class="meta-val">${t.rooms_fetched || 0}</div><div class="meta-lbl">房间</div></div>
+        <div class="meta-item"><div class="meta-val">${t.users_fetched || 0}</div><div class="meta-lbl">拉取用户</div></div>
+        <div class="meta-item"><div class="meta-val">${t.users_deduped || 0}</div><div class="meta-lbl">去重后</div></div>
+        <div class="meta-item"><div class="meta-val">${t.msg_sent || 0}</div><div class="meta-lbl">已发送</div></div>
+        <div class="meta-item"><div class="meta-val">${t.msg_success || 0}</div><div class="meta-lbl">成功</div></div>
+        <div class="meta-item"><div class="meta-val">${t.msg_failed || 0}</div><div class="meta-lbl">失败</div></div>
+      </div>
+      <div class="tc-actions">${actionsHtml}</div>
+    </div>`;
+  }).join('');
 }
 
-// ===== New Task =====
-async function openNewTaskModal() {
-  populateAppSelects();
-  document.getElementById('taskAccountSelect').innerHTML = '<option value="">— 先选择 APP —</option>';
-  document.getElementById('taskGenderFilter').value = '';
-  document.getElementById('taskRankFilter').value = '0';
-  document.getElementById('taskRoomTypeFilter').value = '';
-  document.getElementById('taskSkipSent').checked = false;
-  openModal('taskModalOverlay');
+// ── New Task ──
+async function showNewTaskModal() {
+  const r = await fetch(API + '/apps');
+  const apps = await r.json();
+  document.getElementById('taskApp').innerHTML = apps.map(a => `<option value="${a.name}">${a.name}</option>`).join('');
+  loadTaskAccounts();
+  document.getElementById('newTaskModal').classList.add('show');
 }
 
-async function onTaskAppChange() {
-  const appName = document.getElementById('taskAppSelect').value;
-  const sel = document.getElementById('taskAccountSelect');
-  if (!appName) { sel.innerHTML = '<option value="">— 先选择 APP —</option>'; return; }
-  sel.innerHTML = '<option value="">加载中...</option>';
-  try {
-    accounts = await API.get(`/api/accounts?app_name=${encodeURIComponent(appName)}`);
-    sel.innerHTML = '<option value="">— 选择账号 —</option>';
-    accounts.forEach(a => {
-      sel.innerHTML += `<option value="${a.id}">${escHtml(a.phone)} (${escHtml(a.health_status)})</option>`;
-    });
-  } catch (e) {
-    sel.innerHTML = '<option value="">加载失败</option>';
-    toast('加载账号失败: ' + e.message, 'error');
-  }
+async function loadTaskAccounts() {
+  const app = document.getElementById('taskApp').value;
+  const r = await fetch(API + '/accounts?app_name=' + app);
+  const accounts = await r.json();
+  document.getElementById('taskAccount').innerHTML = accounts.map(a => `<option value="${a.id}">${a.phone || 'ID:' + a.id}</option>`).join('');
 }
 
 async function createTask() {
-  const appName = document.getElementById('taskAppSelect').value;
-  const accountId = document.getElementById('taskAccountSelect').value;
-  if (!appName) return toast('请选择目标 APP', 'error');
-  if (!accountId) return toast('请选择账号', 'error');
-
-  const config = { filters: {} };
-  const gender = document.getElementById('taskGenderFilter').value;
-  const rankMax = document.getElementById('taskRankFilter').value;
-  const roomType = document.getElementById('taskRoomTypeFilter').value;
-  const skipSent = document.getElementById('taskSkipSent').checked;
-
-  if (gender) config.filters.gender = gender;
-  if (rankMax && rankMax !== '0') config.filters.rank_max = parseInt(rankMax);
-  if (roomType) config.filters.room_type = roomType;
-  if (skipSent) config.filters.skip_sent = true;
-
-  try {
-    const task = await API.post('/api/tasks', {
-      app_name: appName,
-      account_id: parseInt(accountId),
-      config
-    });
-    closeModal('taskModalOverlay');
-    toast(`任务 #${task.id} 已创建`, 'success');
-    // Auto-run
-    try {
-      await API.post(`/api/tasks/${task.id}/run`);
-      toast(`任务 #${task.id} 已启动`, 'success');
-    } catch (e) {
-      toast(`任务已创建但启动失败: ${e.message}`, 'error');
+  const app = document.getElementById('taskApp').value;
+  const account_id = parseInt(document.getElementById('taskAccount').value);
+  if (!account_id) { toast('请先选择账号', 'error'); return; }
+  const config = {
+    filters: {
+      gender: document.getElementById('filterGender').value,
+      rank_max: parseInt(document.getElementById('filterRank').value) || null,
+      room_type: document.getElementById('filterRoomType').value,
+      skip_sent: document.getElementById('filterSkipSent').checked,
     }
-    await fetchDashboardData();
-    renderDashboard();
-  } catch (e) {
-    toast('创建任务失败: ' + e.message, 'error');
-  }
+  };
+  const r = await fetch(API + '/tasks', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({app_name: app, account_id, config})
+  });
+  const task = await r.json();
+  await fetch(API + '/tasks/' + task.id + '/run', {method: 'POST'});
+  closeModal('newTaskModal');
+  toast('任务已创建并启动', 'success');
+  switchView('dashboard');
 }
 
-async function runTask(id) {
-  try {
-    await API.post(`/api/tasks/${id}/run`);
-    toast(`任务 #${id} 已启动`, 'success');
-    await fetchDashboardData();
-    renderDashboard();
-  } catch (e) {
-    toast('启动失败: ' + e.message, 'error');
-  }
+async function rerunTask(id) {
+  await fetch(API + '/tasks/' + id + '/run', {method: 'POST'});
+  toast('任务已启动', 'success');
+  refresh();
 }
 
-// ===== Accounts Page =====
-function renderAccountsPage() {
-  const main = document.getElementById('mainContent');
-  main.innerHTML = `
-    <div class="page-header">
-      <h2>账号管理</h2>
-      <p>管理与各 APP 绑定的运营账号</p>
-    </div>
-    <button class="btn btn-primary" onclick="openAccountModal()">+ 管理账号</button>
-    <div style="margin-top:20px;" id="accountsPreview">
-      <p class="empty-state">点击上方按钮进入账号管理</p>
-    </div>
-  `;
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+// ── Accounts ──
+async function loadApps() {
+  const r = await fetch(API + '/apps');
+  const apps = await r.json();
+  const html = apps.map(a => `<option value="${a.name}">${a.name}</option>`).join('');
+  document.getElementById('acctApp').innerHTML = html;
+  document.getElementById('taskApp').innerHTML = html;
 }
 
-async function openAccountModal() {
-  populateAppSelects();
-  document.getElementById('accountAddSection').classList.add('hidden');
-  document.getElementById('accountListContainer').innerHTML = '<p class="empty-state">请先选择 APP</p>';
-  openModal('accountModalOverlay');
-}
-
-async function onAccountAppChange() {
-  const appName = document.getElementById('accountAppSelect').value;
-  if (!appName) {
-    document.getElementById('accountAddSection').classList.add('hidden');
+async function renderAccounts() {
+  const app = document.getElementById('acctApp').value;
+  if (!app) return;
+  const r = await fetch(API + '/accounts?app_name=' + app);
+  const accounts = await r.json();
+  const tbody = document.getElementById('acctTbody');
+  if (accounts.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="color:#8e8e93;text-align:center;padding:24px">暂无账号</td></tr>';
     return;
   }
-  document.getElementById('accountAddSection').classList.remove('hidden');
-  await loadAccountsForApp(appName);
-}
-
-async function loadAccountsForApp(appName) {
-  const container = document.getElementById('accountListContainer');
-  container.innerHTML = '<div class="loading"><span class="spinner"></span>加载中...</div>';
-  try {
-    accounts = await API.get(`/api/accounts?app_name=${encodeURIComponent(appName)}`);
-    if (accounts.length === 0) {
-      container.innerHTML = '<p class="empty-state">暂无账号，请添加</p>';
-    } else {
-      let html = '<table class="data-table"><thead><tr><th>ID</th><th>手机号</th><th>健康状态</th></tr></thead><tbody>';
-      accounts.forEach(a => {
-        html += `<tr><td>${a.id}</td><td>${escHtml(a.phone)}</td><td>${escHtml(a.health_status || '—')}</td></tr>`;
-      });
-      html += '</tbody></table>';
-      container.innerHTML = html;
-    }
-  } catch (e) {
-    container.innerHTML = '<p class="empty-state">加载失败</p>';
-    toast('加载账号失败: ' + e.message, 'error');
-  }
+  tbody.innerHTML = accounts.map(a => `
+    <tr>
+      <td>${escapeHtml(a.app_name)}</td>
+      <td>${escapeHtml(a.phone || '-')}</td>
+      <td class="health-${a.health_status === 'ok' ? 'ok' : 'warn'}">${a.health_status}</td>
+      <td>${a.last_health_check || '-'}</td>
+    </tr>
+  `).join('');
 }
 
 async function addAccount() {
-  const appName = document.getElementById('accountAppSelect').value;
-  const phone = document.getElementById('newAccountPhone').value.trim();
-  const token = document.getElementById('newAccountToken').value.trim();
-  if (!appName) return toast('请先选择 APP', 'error');
-  if (!phone) return toast('请输入手机号', 'error');
-  if (!token) return toast('请输入 Token', 'error');
-
-  try {
-    await API.post('/api/accounts', { app_name: appName, phone, token });
-    toast('账号添加成功', 'success');
-    document.getElementById('newAccountPhone').value = '';
-    document.getElementById('newAccountToken').value = '';
-    await loadAccountsForApp(appName);
-  } catch (e) {
-    toast('添加失败: ' + e.message, 'error');
-  }
+  const app = document.getElementById('acctApp').value;
+  const phone = document.getElementById('acctPhone').value;
+  const token = document.getElementById('acctToken').value;
+  if (!phone) { toast('请输入手机号', 'error'); return; }
+  await fetch(API + '/accounts', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({app_name: app, phone, token})
+  });
+  document.getElementById('acctPhone').value = '';
+  document.getElementById('acctToken').value = '';
+  toast('账号已添加', 'success');
+  renderAccounts();
 }
 
-// ===== Templates Page =====
-function renderTemplatesPage() {
-  const main = document.getElementById('mainContent');
-  main.innerHTML = `
-    <div class="page-header">
-      <h2>消息模板</h2>
-      <p>管理各 APP 的私信模板内容</p>
-    </div>
-    <button class="btn btn-primary" onclick="openTemplateModal()">管理模板</button>
-    <div style="margin-top:20px;" id="templatesPreview">
-      <p class="empty-state">点击上方按钮进入模板管理</p>
-    </div>
-  `;
+// ── Templates ──
+async function loadTplApps() {
+  const r = await fetch(API + '/apps');
+  const apps = await r.json();
+  const html = apps.map(a => `<option value="${a.name}">${a.name}</option>`).join('');
+  document.getElementById('tplApp').innerHTML = html;
 }
 
-async function openTemplateModal() {
-  populateAppSelects();
-  document.getElementById('templateEditSection').classList.add('hidden');
-  document.getElementById('templateListContainer').innerHTML = '<p class="empty-state">请先选择 APP</p>';
-  openModal('templateModalOverlay');
-}
-
-async function loadTemplates() {
-  const appName = document.getElementById('templateAppSelect').value;
-  if (!appName) {
-    document.getElementById('templateEditSection').classList.add('hidden');
+async function renderTemplates() {
+  const app = document.getElementById('tplApp').value;
+  if (!app) return;
+  const r = await fetch(API + '/templates/' + app);
+  const data = await r.json();
+  const templates = data.templates || [];
+  document.getElementById('tplListTitle').textContent = `话术列表 (${templates.length})`;
+  const div = document.getElementById('tplList');
+  if (templates.length === 0) {
+    div.innerHTML = '<p style="color:#8e8e93;font-size:13px;padding:12px 0">暂无话术</p>';
     return;
   }
-  document.getElementById('templateEditSection').classList.remove('hidden');
-  const container = document.getElementById('templateListContainer');
-  container.innerHTML = '<div class="loading"><span class="spinner"></span>加载中...</div>';
-  try {
-    const data = await API.get(`/api/templates/${encodeURIComponent(appName)}`);
-    templates = data.templates || [];
-    if (templates.length === 0) {
-      container.innerHTML = '<p class="empty-state">暂无模板，请添加</p>';
-    } else {
-      let html = '';
-      templates.forEach((t, i) => {
-        html += `<div class="tag" style="margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;padding:8px 12px;">
-          <span style="flex:1;word-break:break-all;">${escHtml(t)}</span>
-          <span class="tag-remove" onclick="removeTemplate(${i})" title="删除">&times;</span>
-        </div>`;
-      });
-      container.innerHTML = html;
-    }
-  } catch (e) {
-    container.innerHTML = '<p class="empty-state">加载失败</p>';
-    toast('加载模板失败: ' + e.message, 'error');
-  }
+  div.innerHTML = templates.map((t, i) => `
+    <div class="tpl-item">
+      <div class="tpl-num">${i + 1}</div>
+      <div class="tpl-text">${escapeHtml(t)}</div>
+      <button class="tpl-remove" onclick="removeTemplate('${escapeHtml(app)}', ${i})" title="删除">&times;</button>
+    </div>
+  `).join('');
 }
 
-function removeTemplate(index) {
+async function addTemplate() {
+  const app = document.getElementById('tplApp').value;
+  const text = document.getElementById('tplText').value.trim();
+  if (!text) { toast('请输入话术内容', 'error'); return; }
+
+  const r = await fetch(API + '/templates/' + app);
+  const data = await r.json();
+  const templates = [...(data.templates || []), text];
+  await fetch(API + '/templates/' + app, {
+    method: 'PUT', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({app_name: app, templates})
+  });
+  document.getElementById('tplText').value = '';
+  toast('话术已添加', 'success');
+  renderTemplates();
+}
+
+async function removeTemplate(app, index) {
+  const r = await fetch(API + '/templates/' + app);
+  const data = await r.json();
+  const templates = data.templates || [];
   templates.splice(index, 1);
-  renderTemplateList();
+  await fetch(API + '/templates/' + app, {
+    method: 'PUT', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({app_name: app, templates})
+  });
+  toast('话术已删除', 'success');
+  renderTemplates();
 }
 
-function renderTemplateList() {
-  const container = document.getElementById('templateListContainer');
-  if (templates.length === 0) {
-    container.innerHTML = '<p class="empty-state">暂无模板，请添加</p>';
-  } else {
-    let html = '';
-    templates.forEach((t, i) => {
-      html += `<div class="tag" style="margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;padding:8px 12px;">
-        <span style="flex:1;word-break:break-all;">${escHtml(t)}</span>
-        <span class="tag-remove" onclick="removeTemplate(${i})" title="删除">&times;</span>
-      </div>`;
-    });
-    container.innerHTML = html;
-  }
+// ── Toast ──
+function toast(msg, type) {
+  const container = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => { el.remove(); }, 2500);
 }
 
-function addTemplate() {
-  const textarea = document.getElementById('newTemplateContent');
-  const content = textarea.value.trim();
-  if (!content) return toast('请输入模板内容', 'error');
-  templates.push(content);
-  textarea.value = '';
-  renderTemplateList();
-  toast('模板已添加（尚未保存）', 'info');
+// ── Utils ──
+function escapeHtml(s) {
+  if (!s) return '';
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-async function saveTemplates() {
-  const appName = document.getElementById('templateAppSelect').value;
-  if (!appName) return toast('请先选择 APP', 'error');
-  try {
-    await API.put(`/api/templates/${encodeURIComponent(appName)}`, {
-      app_name: appName,
-      templates
-    });
-    toast('模板保存成功', 'success');
-  } catch (e) {
-    toast('保存失败: ' + e.message, 'error');
-  }
-}
-
-// ===== Utility =====
-function escHtml(str) {
-  if (str === null || str === undefined) return '';
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-// ===== Overlay click to close =====
-document.addEventListener('click', (e) => {
-  if (e.target.classList.contains('modal-overlay')) {
-    e.target.classList.remove('open');
-  }
-});
-
-// ===== Keyboard =====
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    document.querySelectorAll('.modal-overlay.open').forEach(o => o.classList.remove('open'));
-  }
-});
+// ── Init ──
+loadApps();
+refresh();
+setInterval(refresh, 5000);
 </script>
 </body>
 </html>
