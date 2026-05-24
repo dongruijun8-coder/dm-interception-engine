@@ -1,0 +1,52 @@
+from engine import BasePlugin, AuthResult, Room, User, SendResult, HealthStatus
+
+class {{ app|capitalize }}Plugin(BasePlugin):
+    APP_NAME = "{{ app }}"
+    BASE_URL = "{{ base_url }}"
+
+    def authenticate(self, credential: dict) -> AuthResult:
+        # TODO: 实现认证逻辑
+{% if auth.login_flow %}
+{% for step in auth.login_flow %}
+        # Step {{ step.order }}: {{ step.method }} {{ step.endpoint }}
+{% endfor %}
+{% endif %}
+        # credential 包含: {{ credential_hint }}
+        pass
+
+    def fetch_rooms(self, filters: dict) -> list[Room]:
+{% for ep in endpoints if ep.category == "rooms" %}
+        # {{ ep.method }} {{ ep.path }}
+        # 参数: {{ ep.params }}
+{% if ep.pagination %}
+        # 分页: {{ ep.pagination }}
+{% endif %}
+{% endfor %}
+        pass
+
+    def fetch_users(self, user: Room) -> list[User]:
+{% for ep in endpoints if ep.category == "rank" %}
+        # {{ ep.method }} {{ ep.path }}
+        # 参数: {{ ep.params }}
+{% endfor %}
+        pass
+
+    def send_message(self, user: User, content: dict) -> SendResult:
+{% for ep in endpoints if ep.category == "message" %}
+        # {{ ep.method }} {{ ep.path }}
+{% if ep.pre_steps %}
+{% for ps in ep.pre_steps %}
+        # 前置: {{ ps.endpoint }} → 提取 {{ ps.extract }} → {{ ps.pass_to }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+        pass
+
+    def check_account_health(self) -> HealthStatus:
+{% if status_codes %}
+        # 已知状态码:
+{% for code, desc in status_codes.items() %}
+        #   {{ code }}: {{ desc }}
+{% endfor %}
+{% endif %}
+        pass
