@@ -330,6 +330,9 @@ body {
     <a data-view="templates" onclick="switchView('templates')">
       <span class="nav-icon">&#9998;</span> 消息模板
     </a>
+    <a data-view="apps" onclick="switchView('apps')">
+      <span class="nav-icon">&#9790;</span> APP 管理
+    </a>
   </div>
   <div class="sidebar-footer">v0.1.0</div>
 </div>
@@ -384,6 +387,20 @@ body {
         <button class="btn btn-primary" onclick="addAccount()" style="width:100%;justify-content:center">添加账号</button>
       </div>
     </div>
+  </div>
+
+  <!-- ═══ Apps View ═══ -->
+  <div class="view" id="view-apps">
+    <div class="page-hd">
+      <h2>APP 管理</h2>
+      <p>管理已接入的 APP，支持通过 api_spec.json 快速注册新 APP</p>
+    </div>
+
+    <div class="section-hd">
+      <h3>已接入 APP</h3>
+      <button class="btn btn-primary" onclick="showAddAppModal()">+ 接入新 APP</button>
+    </div>
+    <div class="task-list" id="appList"></div>
   </div>
 
   <!-- ═══ Templates View ═══ -->
@@ -464,6 +481,26 @@ body {
   </div>
 </div>
 
+<!-- Add App Modal -->
+<div class="modal-overlay" id="addAppModal">
+  <div class="modal" style="width:520px">
+    <h3>接入新 APP</h3>
+    <div class="form-group">
+      <label>APP 名称</label>
+      <input id="addAppName" placeholder="例如: weixin, douyin">
+    </div>
+    <div class="form-group">
+      <label>api_spec.json 内容</label>
+      <textarea id="addAppSpec" style="min-height:180px;font-family:'SF Mono',Consolas,monospace;font-size:12px" placeholder="粘贴 api_spec.json 内容..."></textarea>
+    </div>
+    <p style="font-size:11px;color:#8e8e93;margin-bottom:12px">从逆向工具箱获取 api_spec.json 内容，粘贴到上方即可。支持 {token}、{uid} 等模板变量。</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('addAppModal')">取消</button>
+      <button class="btn btn-primary" onclick="registerApp()">注册 APP</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-container" id="toasts"></div>
 
 <script>
@@ -481,6 +518,7 @@ function switchView(view) {
 
   if (view === 'accounts') { loadApps(); renderAccounts(); }
   if (view === 'templates') { loadTplApps(); renderTemplates(); }
+  if (view === 'apps') { loadAppsList(); }
   if (view === 'dashboard') refresh();
 }
 
@@ -736,6 +774,68 @@ function toast(msg, type) {
 function escapeHtml(s) {
   if (!s) return '';
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// ── APP Management ──
+async function loadAppsList() {
+  const r = await fetch(API + '/apps');
+  const apps = await r.json();
+  const div = document.getElementById('appList');
+  if (apps.length === 0) {
+    div.innerHTML = `<div class="empty-state"><div class="empty-icon">&#9790;</div><p>暂无接入的 APP</p></div>`;
+    return;
+  }
+  div.innerHTML = apps.map(a => `
+    <div class="task-card">
+      <div class="tc-top">
+        <div class="tc-app">
+          <div class="app-avatar">&#x1F4F1;</div>
+          <div>
+            <div class="app-name">${escapeHtml(a.name)}</div>
+            <div class="task-id">${a.type === 'plugin' ? '自定义插件' : 'Spec 驱动'}</div>
+          </div>
+        </div>
+        <span class="tc-status done">${a.has_plugin ? 'Active' : 'Registered'}</span>
+      </div>
+      <div class="tc-actions">
+        ${a.type === 'spec' ? `<button class="btn btn-sm btn-danger" onclick="removeApp('${escapeHtml(a.name)}')">移除</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function showAddAppModal() {
+  document.getElementById('addAppName').value = '';
+  document.getElementById('addAppSpec').value = '';
+  document.getElementById('addAppModal').classList.add('show');
+}
+
+async function registerApp() {
+  const app_name = document.getElementById('addAppName').value.trim();
+  const specText = document.getElementById('addAppSpec').value.trim();
+  if (!app_name) { toast('请输入 APP 名称', 'error'); return; }
+  if (!specText) { toast('请粘贴 api_spec.json 内容', 'error'); return; }
+  try {
+    const spec = JSON.parse(specText);
+    await fetch(API + '/apps', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({app_name, spec})
+    });
+    closeModal('addAppModal');
+    toast('APP 已注册', 'success');
+    loadAppsList();
+    loadApps(); // refresh account/task selectors
+    loadTplApps();
+  } catch (e) {
+    toast('JSON 格式错误: ' + e.message, 'error');
+  }
+}
+
+async function removeApp(app_name) {
+  await fetch(API + '/apps/' + app_name, {method: 'DELETE'});
+  toast('APP 已移除', 'success');
+  loadAppsList();
+  loadApps();
 }
 
 // ── Init ──

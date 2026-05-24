@@ -1,11 +1,17 @@
 """FastAPI routes for the dashboard."""
+import importlib.util
+import json
+from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from engine import db
+from engine.plugin_base import BasePlugin
 from engine.plugins import discover_plugins, load_plugin
 from engine.pipeline import run_pipeline
 from engine.templates import get_templates as get_tpl, set_templates as save_tpl
 import asyncio
+
+SPECS_DIR = Path(__file__).parent.parent / "data" / "api_specs"
 
 router = APIRouter(prefix="/api")
 
@@ -29,10 +35,78 @@ class TemplatesRequest(BaseModel):
 
 # ── App/Plugin ──
 
+def plugin_names() -> set:
+    """Return app names that have custom Python plugin code."""
+    names = set()
+    plugins_dir = Path(__file__).parent / "plugins"
+    if plugins_dir.exists():
+        for entry in plugins_dir.iterdir():
+            if entry.is_dir() and not entry.name.startswith("_") and (entry / "plugin.py").exists():
+                spec = importlib.util.spec_from_file_location(
+                    f"engine.plugins.{entry.name}.plugin",
+                    str(entry / "plugin.py")
+                )
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                for attr_name in dir(mod):
+                    attr = getattr(mod, attr_name)
+                    if (isinstance(attr, type) and issubclass(attr, BasePlugin)
+                            and attr is not BasePlugin):
+                        names.add(attr.app_name)
+    return names
+
+
 @router.get("/apps")
 async def list_apps():
     plugins = discover_plugins()
-    return [{"name": name, "has_plugin": True} for name in plugins]
+    names = plugin_names()
+    apps = [{"name": name, "has_plugin": True, "type": "plugin" if name in names else "spec"} for name in plugins]
+    return apps
+
+
+@router.post("/apps")
+async def register_app(req: dict):
+    """Register a new APP from api_spec.json. Body: {app_name, spec}"""
+    app_name = req.get("app_name", "")
+    spec = req.get("spec", {})
+    if not app_name or not spec:
+        raise HTTPException(400, "app_name and spec are required")
+    if "app" not in spec:
+        spec["app"] = app_name
+
+    SPECS_DIR.mkdir(parents=True, exist_ok=True)
+    filepath = SPECS_DIR / f"{app_name}.json"
+    with open(filepath, "w", encoding="utf-8") as f:
+        json.dump(spec, f, ensure_ascii=False, indent=2)
+    return {"app_name": app_name, "status": "registered"}
+
+
+@router.delete("/apps/{app_name}")
+async def remove_app(app_name: str):
+    """Remove a spec-driven APP."""
+    filepath = SPECS_DIR / f"{app_name}.json"
+    if filepath.exists():
+        filepath.unlink()
+        return {"app_name": app_name, "status": "removed"}
+    raise HTTPException(404, f"APP '{app_name}' not found")
+
+
+@router.get("/apps/{app_name}/spec")
+async def get_app_spec(app_name: str):
+    """Return the full api_spec.json for an APP."""
+    # Check custom plugins first
+    plugins_dir = Path(__file__).parent / "plugins" / app_name
+    if plugins_dir.exists() and (plugins_dir / "api_spec.json").exists():
+        with open(plugins_dir / "api_spec.json", "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    # Check spec files
+    filepath = SPECS_DIR / f"{app_name}.json"
+    if filepath.exists():
+        with open(filepath, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    raise HTTPException(404, f"Spec for '{app_name}' not found")
 
 
 # ── Account routes ──
