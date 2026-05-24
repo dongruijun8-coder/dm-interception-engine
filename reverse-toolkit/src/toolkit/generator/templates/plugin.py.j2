@@ -1,52 +1,184 @@
+import requests
 from engine import BasePlugin, AuthResult, Room, User, SendResult, HealthStatus
 
 class {{ app|capitalize }}Plugin(BasePlugin):
     APP_NAME = "{{ app }}"
     BASE_URL = "{{ base_url }}"
+    HEADERS = {{ common_params.headers | tojson }}
+    COMMON_BODY = {{ common_params.body | tojson }}
+
+    def __init__(self):
+        self._session = {}
+
+    # ── HTTP helpers ──────────────────────────────────────
+
+    def _build_body(self, extra=None):
+        if isinstance(self.COMMON_BODY, dict):
+            body = dict(self.COMMON_BODY)
+        else:
+            body = {k: None for k in self.COMMON_BODY}
+        if self._session.get("token"):
+            body["token"] = self._session["token"]
+        if self._session.get("uid"):
+            body["uid"] = self._session["uid"]
+        if extra:
+            body.update(extra)
+        return body
+
+    def _post(self, path, extra=None):
+        r = requests.post(self.BASE_URL + path,
+                          json=self._build_body(extra),
+                          headers=self.HEADERS, timeout=15)
+        r.raise_for_status()
+        return r.json()
+
+    def _get(self, path, extra=None):
+        r = requests.get(self.BASE_URL + path,
+                         params=self._build_body(extra),
+                         headers=self.HEADERS, timeout=15)
+        r.raise_for_status()
+        return r.json()
+
+    def _paginate(self, path, extra, pagination, item_key):
+        """Collect all items from a paginated endpoint."""
+        items = []
+        offset = 0
+        page = 1
+        while True:
+            params = dict(extra) if extra else {}
+{% if "offset" in common_params.body %}
+            params["offset"] = offset
+            params["limit"] = 20
+{% elif "page" in common_params.body or "pageNum" in common_params.body %}
+            params["pageNum"] = page
+            params["pageSize"] = 20
+{% else %}
+            params["offset"] = offset
+            params["limit"] = 20
+{% endif %}
+            data = self._post(path, params)
+            status = data.get("status", "")
+{% if status_codes %}
+            if status not in [k for k, v in _status_ok.items()]:
+                break
+{% endif %}
+            batch = self._extract(data, item_key)
+            if not batch:
+                break
+            items.extend(batch)
+            if len(batch) < 20:
+                break
+            offset += len(batch)
+            page += 1
+        return items
+
+    def _extract(self, data, path):
+        """Extract nested value from dict by dotted key."""
+        if not path:
+            return data
+        keys = path.replace("[]", "").split(".")
+        val = data
+        for k in keys:
+            if isinstance(val, dict):
+                val = val.get(k)
+            else:
+                return None
+        return val if isinstance(val, list) else [val] if val else []
+
+{% if status_codes %}
+    _status_ok = {{ status_codes | tojson }}
+{% endif %}
+
+    # ── Interface methods ─────────────────────────────────
 
     def authenticate(self, credential: dict) -> AuthResult:
-        # TODO: 实现认证逻辑
 {% if auth.login_flow %}
 {% for step in auth.login_flow %}
         # Step {{ step.order }}: {{ step.method }} {{ step.endpoint }}
+        r{{ step.order }} = self._post("{{ step.endpoint }}", {
+{% for k, v in step.params.items() %}
+            "{{ k }}": credential.get("{{ k }}", ""),
 {% endfor %}
+        })
+{% if step.extract %}
+        self._session["{{ step.extract }}"] = self._extract(r{{ step.order }}, "{{ step.extract }}")
 {% endif %}
-        # credential 包含: {{ credential_hint }}
-        pass
+{% endfor %}
+        return AuthResult(success=True, session=dict(self._session))
+{% else %}
+        return AuthResult(success=True, session={})
+{% endif %}
 
     def fetch_rooms(self, filters: dict) -> list[Room]:
-{% for ep in endpoints if ep.category == "rooms" %}
-        # {{ ep.method }} {{ ep.path }}
-        # 参数: {{ ep.params }}
-{% if ep.pagination %}
-        # 分页: {{ ep.pagination }}
+{% set room_eps = endpoints | selectattr("category", "equalto", "rooms") | list %}
+{% if room_eps %}
+        raw = self._paginate("{{ room_eps[0].path }}",
+            {{ room_eps[0].params | tojson }},
+            "{{ room_eps[0].pagination or 'offset_limit' }}",
+{% if room_eps[0].response_model %}
+            "data.{{ room_eps[0].response_model | replace('[]','') }}")
+{% else %}
+            "data.list")
 {% endif %}
-{% endfor %}
-        pass
+        return [Room(id=str(r.get("roomId", r.get("id", ""))),
+                     name=r.get("name", r.get("roomName", "")),
+                     raw=r) for r in raw]
+{% else %}
+        return []
+{% endif %}
 
-    def fetch_users(self, user: Room) -> list[User]:
-{% for ep in endpoints if ep.category == "rank" %}
-        # {{ ep.method }} {{ ep.path }}
-        # 参数: {{ ep.params }}
-{% endfor %}
-        pass
+    def fetch_users(self, room: Room) -> list[User]:
+{% set rank_eps = endpoints | selectattr("category", "equalto", "rank") | list %}
+{% if rank_eps %}
+        raw = self._paginate("{{ rank_eps[0].path }}",
+            {"unRoomId": room.id} | {{ rank_eps[0].params | tojson }},
+            "{{ rank_eps[0].pagination or 'offset_limit' }}",
+{% if rank_eps[0].response_model %}
+            "data.{{ rank_eps[0].response_model | replace('[]','') }}")
+{% else %}
+            "data.list")
+{% endif %}
+        return [User(uid=str(r.get("uid", r.get("userId", ""))),
+                     name=r.get("name", r.get("nickname", "")),
+                     gender=str(r.get("gender", "")),
+                     rank=r.get("rank", 0),
+                     score=r.get("score", 0),
+                     room_id=str(room.id),
+                     raw=r) for r in raw]
+{% else %}
+        return []
+{% endif %}
 
     def send_message(self, user: User, content: dict) -> SendResult:
-{% for ep in endpoints if ep.category == "message" %}
-        # {{ ep.method }} {{ ep.path }}
+{% set msg_eps = endpoints | selectattr("category", "equalto", "message") | list %}
+{% if msg_eps %}
+{% set ep = msg_eps[0] %}
+        params = {"msgBody": content.get("body", ""),
+                  "toUid": user.uid}
 {% if ep.pre_steps %}
 {% for ps in ep.pre_steps %}
-        # 前置: {{ ps.endpoint }} → 提取 {{ ps.extract }} → {{ ps.pass_to }}
+        # Pre-step: {{ ps.endpoint }} → extract "{{ ps.extract }}"
+        pre{{ loop.index }} = self._post("{{ ps.endpoint }}")
+        params["{{ ps.pass_to }}"] = self._extract(pre{{ loop.index }}, "{{ ps.extract }}")
 {% endfor %}
 {% endif %}
-{% endfor %}
-        pass
+        r = self._post("{{ ep.path }}", params)
+        ok = r.get("status") in self._status_ok if hasattr(self, '_status_ok') else True
+        return SendResult(success=ok, errorCode="" if ok else r.get("status", "UNKNOWN"),
+                          costMs=0, raw=r)
+{% else %}
+        return SendResult(success=False, errorCode="NO_MESSAGE_ENDPOINT", costMs=0, raw={})
+{% endif %}
 
     def check_account_health(self) -> HealthStatus:
-{% if status_codes %}
-        # 已知状态码:
-{% for code, desc in status_codes.items() %}
-        #   {{ code }}: {{ desc }}
-{% endfor %}
+{% set profile_eps = endpoints | selectattr("category", "equalto", "profile") | list %}
+{% if profile_eps %}
+        try:
+            r = self._post("{{ profile_eps[0].path }}")
+            return HealthStatus(ok=r.get("status") in self._status_ok if hasattr(self, '_status_ok') else True,
+                                reason="", detail="")
+        except Exception as e:
+            return HealthStatus(ok=False, reason=str(e), detail="")
+{% else %}
+        return HealthStatus(ok=True, reason="no profile endpoint configured", detail="")
 {% endif %}
-        pass
