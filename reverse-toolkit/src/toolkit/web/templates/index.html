@@ -16,6 +16,10 @@
   <button class="btn-primary" onclick="alert('TODO: 新建项目表单')">+ 新建项目</button>
 </div>
 
+{% if error %}
+<div class="error-banner">{{ error }}</div>
+{% endif %}
+
 <div class="project-grid">
 {% for p in projects %}
   <a href="/project/{{ p.app_name }}" class="project-card">

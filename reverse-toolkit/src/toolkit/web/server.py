@@ -24,7 +24,10 @@ def index(request: Request):
 
 @app.get("/project/{app_name}", response_class=HTMLResponse)
 def project_detail(request: Request, app_name: str):
-    status = project_status(app_name)
+    proj_status = project_status(app_name)
+    if proj_status.get("db_status") == "not_found":
+        return templates.TemplateResponse(request, "index.html", {"projects": [], "error": f"项目 {app_name} 不存在"})
+
     proj_dir = PROJECTS_ROOT / app_name
 
     spec_data = None
@@ -39,7 +42,7 @@ def project_detail(request: Request, app_name: str):
 
     return templates.TemplateResponse(request, "project.html", {
         "app_name": app_name,
-        "status": status,
+        "status": proj_status,
         "spec": spec_data,
         "notes": notes,
     })

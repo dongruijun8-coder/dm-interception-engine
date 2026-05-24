@@ -16,10 +16,11 @@ def init_project(app_name: str):
 def get_project_dir(app_name: str) -> Path:
     return PROJECTS_ROOT / app_name
 
-def status(app_name: str) -> str:
+def status(app_name: str) -> dict:
     proj_dir = get_project_dir(app_name)
     if not proj_dir.exists():
-        return "not_found"
+        return {"app_name": app_name, "db_status": "not_found", "has_flows": False,
+                "has_spec": False, "has_plugin": False, "project_dir": str(proj_dir)}
     has_spec = (proj_dir / "api_spec.json").exists()
     has_plugin = (proj_dir / "plugin.py").exists()
     has_flows = any((proj_dir / "raw_flows").iterdir())

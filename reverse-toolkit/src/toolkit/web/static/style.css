@@ -17,6 +17,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .status-analyzed{background:#1f6feb20;color:#58a6ff;border:1px solid #1f6feb40}
 .status-scaffolded{background:#23863620;color:#3fb950;border:1px solid #23863640}
 .stat-row{display:flex;gap:16px;font-size:11px;color:#8b949e}
+.error-banner{background:#da363320;border:1px solid #da363340;color:#ff7b72;padding:10px 16px;border-radius:6px;margin-bottom:16px;font-size:13px}
 .empty-state{text-align:center;padding:60px 0;color:#8b949e}
 .empty-state .hint{font-size:12px;margin-top:4px;color:#484f58}
 .tab-bar{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid #21262d;padding-bottom:0}
