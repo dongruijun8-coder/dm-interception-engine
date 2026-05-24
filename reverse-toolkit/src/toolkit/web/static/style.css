@@ -46,3 +46,7 @@ code{font-family:'SF Mono',Consolas,monospace;font-size:11px;background:#0d1117;
 .modal-content input[type=text]{width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d1;padding:8px 12px;font-size:13px;outline:none}
 .modal-content input[type=text]:focus{border-color:#58a6ff}
 .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.msg{padding:10px 16px;border-radius:6px;margin-bottom:14px;font-size:13px}
+.msg-ok{background:#23863620;border:1px solid #23863640;color:#3fb950}
+.msg-err{background:#da363320;border:1px solid #da363340;color:#ff7b72}
+.cmd{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:10px 14px;font-family:'SF Mono',Consolas,monospace;font-size:11px;color:#d2a8ff;overflow-x:auto}

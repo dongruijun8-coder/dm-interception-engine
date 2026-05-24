@@ -14,16 +14,24 @@
 </header>
 
 <div class="tab-bar">
-  <button class="tab active" onclick="switchTab('overview')">概览</button>
-  <button class="tab" onclick="switchTab('endpoints')">API 端点</button>
-  <button class="tab" onclick="switchTab('notes')">对抗记录</button>
+  <button class="tab active" onclick="switchTab('overview', event)">概览</button>
+  <button class="tab" onclick="switchTab('endpoints', event)">API 端点</button>
+  <button class="tab" onclick="switchTab('notes', event)">对抗记录</button>
 </div>
+
+<div id="msg" class="msg" style="display:none"></div>
 
 <div id="tab-overview" class="tab-content">
   <div class="quick-actions">
-    <button class="btn-primary">启动代理抓包</button>
-    <button class="btn-secondary">分析流量</button>
-    <button class="btn-secondary">生成插件骨架</button>
+    <button class="btn-primary" onclick="showProxyCmd()">启动代理抓包</button>
+    <button class="btn-secondary" id="btn-analyze" onclick="runAnalyze()">分析流量</button>
+    <button class="btn-secondary" id="btn-scaffold" onclick="runScaffold()">生成插件骨架</button>
+  </div>
+  <div id="proxy-cmd" class="info-card" style="display:none">
+    <h3>代理抓包命令</h3>
+    <pre class="cmd">cd reverse-toolkit
+PYTHONPATH=src python -m toolkit.cli proxy-start --app {{ app_name }} --host "*.目标域名.com"</pre>
+    <p style="font-size:11px;color:#8b949e">按 Ctrl+C 停止抓包。Frida 脚本位于 proxy/frida_scripts/</p>
   </div>
   {% if spec %}
   <div class="info-card">
@@ -38,12 +46,12 @@
 <div id="tab-endpoints" class="tab-content" style="display:none">
   {% if spec %}
   <div class="filter-bar">
-    <button class="filter-btn active" onclick="filterCategory('all')">全部</button>
-    <button class="filter-btn" onclick="filterCategory('auth')">认证</button>
-    <button class="filter-btn" onclick="filterCategory('rooms')">房间</button>
-    <button class="filter-btn" onclick="filterCategory('rank')">排行榜</button>
-    <button class="filter-btn" onclick="filterCategory('message')">私信</button>
-    <button class="filter-btn" onclick="filterCategory('other')">其他</button>
+    <button class="filter-btn active" onclick="filterCategory('all', event)">全部</button>
+    <button class="filter-btn" onclick="filterCategory('auth', event)">认证</button>
+    <button class="filter-btn" onclick="filterCategory('rooms', event)">房间</button>
+    <button class="filter-btn" onclick="filterCategory('rank', event)">排行榜</button>
+    <button class="filter-btn" onclick="filterCategory('message', event)">私信</button>
+    <button class="filter-btn" onclick="filterCategory('other', event)">其他</button>
   </div>
   <table class="endpoint-table">
     <thead>
@@ -60,27 +68,116 @@
     {% endfor %}
     </tbody>
   </table>
+  {% else %}
+  <div class="empty-state"><p>暂无 API 数据</p><p class="hint">先抓包，再点"分析流量"</p></div>
   {% endif %}
 </div>
 
 <div id="tab-notes" class="tab-content" style="display:none">
-  <textarea class="notes-editor" rows="20">{{ notes }}</textarea>
-  <button class="btn-primary" style="margin-top:12px">保存</button>
+  <textarea id="notes-editor" class="notes-editor" rows="20">{{ notes }}</textarea>
+  <button class="btn-primary" id="btn-notes" style="margin-top:12px" onclick="saveNotes()">保存</button>
 </div>
 
 <script>
-function switchTab(name) {
-  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-  document.getElementById('tab-' + name).style.display = 'block';
-  event.target.classList.add('active');
+function msg(text, ok) {
+  var m = document.getElementById('msg');
+  m.style.display = 'block';
+  m.textContent = text;
+  m.className = 'msg ' + (ok ? 'msg-ok' : 'msg-err');
 }
-function filterCategory(cat) {
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
-  document.querySelectorAll('.endpoint-table tbody tr').forEach(row => {
+
+function switchTab(name, ev) {
+  document.querySelectorAll('.tab-content').forEach(function(el) { el.style.display = 'none'; });
+  document.querySelectorAll('.tab').forEach(function(el) { el.classList.remove('active'); });
+  document.getElementById('tab-' + name).style.display = 'block';
+  ev.target.classList.add('active');
+}
+
+function filterCategory(cat, ev) {
+  document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+  ev.target.classList.add('active');
+  document.querySelectorAll('.endpoint-table tbody tr').forEach(function(row) {
     row.style.display = (cat === 'all' || row.dataset.category === cat) ? '' : 'none';
   });
+}
+
+function showProxyCmd() {
+  var el = document.getElementById('proxy-cmd');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function disable(id) {
+  var btn = document.getElementById(id);
+  btn.disabled = true;
+  btn.textContent = '执行中...';
+}
+
+function enable(id, text) {
+  var btn = document.getElementById(id);
+  btn.disabled = false;
+  btn.textContent = text;
+}
+
+function runAnalyze() {
+  disable('btn-analyze');
+  msg('分析中...', true);
+  fetch('/api/projects/{{ app_name }}/analyze', {method: 'POST'})
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok) {
+        msg('分析完成: ' + data.endpoints + ' 个端点 (' + data.requests + ' 条请求)', true);
+        setTimeout(function() { location.reload(); }, 800);
+      } else {
+        msg('分析失败: ' + data.error, false);
+        enable('btn-analyze', '分析流量');
+      }
+    })
+    .catch(function(e) {
+      msg('请求失败: ' + e, false);
+      enable('btn-analyze', '分析流量');
+    });
+}
+
+function runScaffold() {
+  disable('btn-scaffold');
+  msg('生成中...', true);
+  fetch('/api/projects/{{ app_name }}/scaffold', {method: 'POST'})
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok) {
+        msg('骨架代码已生成', true);
+        setTimeout(function() { location.reload(); }, 800);
+      } else {
+        msg('生成失败: ' + data.error, false);
+        enable('btn-scaffold', '生成插件骨架');
+      }
+    })
+    .catch(function(e) {
+      msg('请求失败: ' + e, false);
+      enable('btn-scaffold', '生成插件骨架');
+    });
+}
+
+function saveNotes() {
+  var btn = document.getElementById('btn-notes');
+  btn.disabled = true;
+  btn.textContent = '保存中...';
+  fetch('/api/projects/{{ app_name }}/notes', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({content: document.getElementById('notes-editor').value})
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      msg('笔记已保存', true);
+      btn.disabled = false;
+      btn.textContent = '保存';
+    })
+    .catch(function(e) {
+      msg('保存失败: ' + e, false);
+      btn.disabled = false;
+      btn.textContent = '保存';
+    });
 }
 </script>
 </body>
