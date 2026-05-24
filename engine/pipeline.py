@@ -74,7 +74,10 @@ async def run_pipeline(plugin: BasePlugin, task_id: int, task_config: dict):
 
         # Insert filtered users into DB
         for u in filtered:
-            await db.insert_user(task_id, app_name, u)
+            try:
+                await db.insert_user(task_id, app_name, u)
+            except Exception as e:
+                logger.warning(f"[{app_name}] Failed to insert user {u.app_uid}: {e}")
 
         # ── Step 6: Send messages ──
         await db.update_task_status(task_id, TaskStatus.SENDING)
@@ -83,11 +86,11 @@ async def run_pipeline(plugin: BasePlugin, task_id: int, task_config: dict):
         msg_failed = 0
 
         db_users = await db.get_task_users(task_id)
+        if not pick_random(app_name):
+            logger.warning(f"[{app_name}] No templates configured, skipping send phase")
+            db_users = []
         for db_user in db_users:
             tpl = pick_random(app_name, db_user["name"])
-            if not tpl:
-                logger.warning(f"[{app_name}] No templates configured, skipping send phase")
-                break
 
             message = Message(body=tpl, template_vars={"name": db_user["name"] or ""})
 
