@@ -55,7 +55,11 @@ class Message:
     template_vars: dict = field(default_factory=dict)
 
     def render(self) -> str:
-        return self.body.format(**self.template_vars)
+        try:
+            return self.body.format(**self.template_vars)
+        except KeyError:
+            # Fall back: leave unreplaced placeholders in place
+            return self.body
 
 
 @dataclass
