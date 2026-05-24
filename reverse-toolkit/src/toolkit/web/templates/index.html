@@ -13,12 +13,27 @@
 </header>
 
 <div class="toolbar">
-  <button class="btn-primary" onclick="alert('TODO: 新建项目表单')">+ 新建项目</button>
+  <button class="btn-primary" onclick="openNewProjectModal()">+ 新建项目</button>
 </div>
 
 {% if error %}
 <div class="error-banner">{{ error }}</div>
 {% endif %}
+
+<div id="new-project-modal" class="modal" style="display:none">
+  <div class="modal-overlay" onclick="closeNewProjectModal()"></div>
+  <div class="modal-content">
+    <h2>新建项目</h2>
+    <form method="POST" action="/api/projects">
+      <label for="app_name">APP 名称</label>
+      <input type="text" name="app_name" id="app_name" placeholder="例如: popo" required autofocus>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" onclick="closeNewProjectModal()">取消</button>
+        <button type="submit" class="btn-primary">创建</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <div class="project-grid">
 {% for p in projects %}
@@ -43,5 +58,18 @@
   </div>
 {% endif %}
 </div>
+
+<script>
+function openNewProjectModal() {
+  document.getElementById('new-project-modal').style.display = 'flex';
+  document.getElementById('app_name').focus();
+}
+function closeNewProjectModal() {
+  document.getElementById('new-project-modal').style.display = 'none';
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeNewProjectModal();
+});
+</script>
 </body>
 </html>

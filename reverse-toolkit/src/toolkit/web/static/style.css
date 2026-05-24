@@ -38,3 +38,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .method-get{background:#1f6feb20;color:#58a6ff}
 code{font-family:'SF Mono',Consolas,monospace;font-size:11px;background:#0d1117;padding:1px 5px;border-radius:3px;color:#d2a8ff}
 .notes-editor{width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d1;padding:12px;font-family:'SF Mono',Consolas,monospace;font-size:12px;line-height:1.6;resize:vertical}
+.modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:100}
+.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.6)}
+.modal-content{position:relative;background:#161b22;border:1px solid #30363d;border-radius:10px;padding:24px;width:380px;max-width:90vw}
+.modal-content h2{font-size:16px;color:#f0f6fc;margin-bottom:16px}
+.modal-content label{display:block;font-size:12px;color:#8b949e;margin-bottom:6px}
+.modal-content input[type=text]{width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d1;padding:8px 12px;font-size:13px;outline:none}
+.modal-content input[type=text]:focus{border-color:#58a6ff}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}

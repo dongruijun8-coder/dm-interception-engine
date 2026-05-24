@@ -1,10 +1,10 @@
 import json
 from pathlib import Path
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from toolkit.project import status as project_status, PROJECTS_ROOT
+from toolkit.project import status as project_status, PROJECTS_ROOT, init_project
 
 WEB_DIR = Path(__file__).resolve().parent
 app = FastAPI(title="逆向工具箱")
@@ -46,3 +46,9 @@ def project_detail(request: Request, app_name: str):
         "spec": spec_data,
         "notes": notes,
     })
+
+
+@app.post("/api/projects")
+def create_project(app_name: str = Form(...)):
+    init_project(app_name)
+    return RedirectResponse(f"/project/{app_name}", status_code=303)
