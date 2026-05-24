@@ -33,8 +33,5 @@ class BasePlugin(ABC):
         """Check if account is still valid (not banned, token not expired)."""
         ...
 
-    @property
-    @abstractmethod
-    def app_name(self) -> str:
-        """Unique APP identifier, e.g. 'popo'."""
-        ...
+    app_name: str
+    """Unique APP identifier, e.g. 'popo'. Subclasses must set this as a class attribute."""
