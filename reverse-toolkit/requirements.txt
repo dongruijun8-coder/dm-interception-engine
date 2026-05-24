@@ -1,0 +1,5 @@
+mitmproxy>=10.0.0
+click>=8.0.0
+jinja2>=3.0.0
+fastapi>=0.100.0
+uvicorn>=0.20.0
