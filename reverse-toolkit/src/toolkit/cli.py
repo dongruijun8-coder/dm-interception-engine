@@ -101,5 +101,19 @@ def proxy_start(app, host, frida):
     start_proxy(app=app, host_filter=host, output_dir=str(proj / "raw_flows"), frida_script=frida)
 
 
+@main.command()
+@click.option("--port", default=9734, help="监听端口")
+@click.option("--no-open", is_flag=True, help="不自动打开浏览器")
+def dashboard(port, no_open):
+    """启动 Web 管理面板"""
+    import uvicorn
+    import webbrowser
+    from toolkit.web.server import app as fastapi_app
+
+    if not no_open:
+        webbrowser.open(f"http://localhost:{port}")
+    uvicorn.run(fastapi_app, host="127.0.0.1", port=port, log_level="info")
+
+
 if __name__ == "__main__":
     main()

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>{{ app_name }} - 逆向工具箱</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="page-header">
+  <a href="/" class="back-link">&larr; 返回</a>
+  <h1>{{ app_name }}</h1>
+  <p class="sub">状态: {{ status.db_status }}</p>
+</header>
+
+<div class="tab-bar">
+  <button class="tab active" onclick="switchTab('overview')">概览</button>
+  <button class="tab" onclick="switchTab('endpoints')">API 端点</button>
+  <button class="tab" onclick="switchTab('notes')">对抗记录</button>
+</div>
+
+<div id="tab-overview" class="tab-content">
+  <div class="quick-actions">
+    <button class="btn-primary">启动代理抓包</button>
+    <button class="btn-secondary">分析流量</button>
+    <button class="btn-secondary">生成插件骨架</button>
+  </div>
+  {% if spec %}
+  <div class="info-card">
+    <h3>基础信息</h3>
+    <p>Base URL: {{ spec.base_url }}</p>
+    <p>认证方式: {{ spec.auth.type }}</p>
+    <p>端点数量: {{ spec.endpoints|length }}</p>
+  </div>
+  {% endif %}
+</div>
+
+<div id="tab-endpoints" class="tab-content" style="display:none">
+  {% if spec %}
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="filterCategory('all')">全部</button>
+    <button class="filter-btn" onclick="filterCategory('auth')">认证</button>
+    <button class="filter-btn" onclick="filterCategory('rooms')">房间</button>
+    <button class="filter-btn" onclick="filterCategory('rank')">排行榜</button>
+    <button class="filter-btn" onclick="filterCategory('message')">私信</button>
+    <button class="filter-btn" onclick="filterCategory('other')">其他</button>
+  </div>
+  <table class="endpoint-table">
+    <thead>
+      <tr><th>方法</th><th>路径</th><th>分类</th><th>分页</th></tr>
+    </thead>
+    <tbody>
+    {% for ep in spec.endpoints %}
+      <tr data-category="{{ ep.category }}">
+        <td><span class="method-badge method-{{ ep.method|lower }}">{{ ep.method }}</span></td>
+        <td><code>{{ ep.path }}</code></td>
+        <td>{{ ep.category }}</td>
+        <td>{{ ep.pagination or '-' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+
+<div id="tab-notes" class="tab-content" style="display:none">
+  <textarea class="notes-editor" rows="20">{{ notes }}</textarea>
+  <button class="btn-primary" style="margin-top:12px">保存</button>
+</div>
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).style.display = 'block';
+  event.target.classList.add('active');
+}
+function filterCategory(cat) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.querySelectorAll('.endpoint-table tbody tr').forEach(row => {
+    row.style.display = (cat === 'all' || row.dataset.category === cat) ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>

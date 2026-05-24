@@ -1,0 +1,39 @@
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f1117;color:#e1e4e8;padding:32px;min-height:100vh}
+.page-header{margin-bottom:24px}
+.page-header h1{font-size:20px;font-weight:600;color:#f0f6fc}
+.page-header .sub{color:#8b949e;font-size:13px;margin-top:4px}
+.back-link{color:#58a6ff;text-decoration:none;font-size:13px;display:block;margin-bottom:8px}
+.toolbar{margin-bottom:20px}
+.btn-primary{background:#1f6feb;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px}
+.btn-secondary{background:#21262d;color:#c9d1d1;border:1px solid #30363d;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px}
+.project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.project-card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px;text-decoration:none;color:inherit;display:block;transition:border-color .15s}
+.project-card:hover{border-color:#58a6ff}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.app-name{font-weight:600;color:#f0f6fc;font-size:15px}
+.status-badge{font-size:10px;padding:2px 8px;border-radius:10px;text-transform:uppercase}
+.status-created{background:#21262d;color:#8b949e}
+.status-analyzed{background:#1f6feb20;color:#58a6ff;border:1px solid #1f6feb40}
+.status-scaffolded{background:#23863620;color:#3fb950;border:1px solid #23863640}
+.stat-row{display:flex;gap:16px;font-size:11px;color:#8b949e}
+.empty-state{text-align:center;padding:60px 0;color:#8b949e}
+.empty-state .hint{font-size:12px;margin-top:4px;color:#484f58}
+.tab-bar{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid #21262d;padding-bottom:0}
+.tab{background:none;border:none;color:#8b949e;padding:8px 16px;cursor:pointer;font-size:13px;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.active{color:#f0f6fc;border-bottom-color:#58a6ff}
+.tab-content{padding-top:12px}
+.quick-actions{display:flex;gap:8px;margin-bottom:20px}
+.info-card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px;margin-bottom:12px}
+.info-card h3{font-size:14px;color:#f0f6fc;margin-bottom:8px}
+.filter-bar{display:flex;gap:6px;margin-bottom:12px}
+.filter-btn{background:#21262d;border:1px solid #30363d;color:#8b949e;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:11px}
+.filter-btn.active{background:#1f6feb30;border-color:#58a6ff;color:#58a6ff}
+.endpoint-table{width:100%;border-collapse:collapse;font-size:12px}
+.endpoint-table th{text-align:left;padding:8px 12px;border-bottom:1px solid #30363d;color:#58a6ff;font-size:11px;font-weight:600}
+.endpoint-table td{padding:7px 12px;border-bottom:1px solid #21262d;color:#c9d1d9}
+.method-badge{font-size:10px;padding:1px 6px;border-radius:4px;font-weight:600}
+.method-post{background:#23863620;color:#3fb950}
+.method-get{background:#1f6feb20;color:#58a6ff}
+code{font-family:'SF Mono',Consolas,monospace;font-size:11px;background:#0d1117;padding:1px 5px;border-radius:3px;color:#d2a8ff}
+.notes-editor{width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d1;padding:12px;font-family:'SF Mono',Consolas,monospace;font-size:12px;line-height:1.6;resize:vertical}
